@@ -3,7 +3,7 @@ export const SITE = {
   author: "koukyo",
   profile: "https://koukyo.site/",
   desc: "koukyo 的个人博客，记录创业历程与财务规划。",
-  title: "koukyo",
+  title: "koukyo.",
   ogImage: "astropaper-og.jpg",
   lightAndDarkMode: true,
   postPerIndex: 4,
