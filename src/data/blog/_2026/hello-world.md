@@ -5,9 +5,10 @@ title: 你好世界：关于这个博客
 featured: true
 draft: false
 tags:
-  - 随笔
+  - 自我介绍
   - 创业
-  - FIRE
+  - 自由
+  - 日本生活
 description: 毕业即创业的人，想找回决定每天做什么的自由。这是我的第一篇文章。
 ---
 
