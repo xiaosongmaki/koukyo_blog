@@ -2,7 +2,7 @@ export const SITE = {
   website: "https://koukyo.site/",
   author: "koukyo",
   profile: "https://koukyo.site/",
-  desc: "koukyo 的个人博客，记录创业历程与财务规划。",
+  desc: "毕业即创业，探索财务自由与人生自主权的个人博客。",
   title: "koukyo.",
   ogImage: "og-image.png",
   lightAndDarkMode: true,
