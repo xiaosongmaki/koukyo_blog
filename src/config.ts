@@ -4,7 +4,7 @@ export const SITE = {
   profile: "https://koukyo.site/",
   desc: "koukyo 的个人博客，记录创业历程与财务规划。",
   title: "koukyo.",
-  ogImage: "astropaper-og.jpg",
+  ogImage: "og-image.png",
   lightAndDarkMode: true,
   postPerIndex: 4,
   postPerPage: 4,
