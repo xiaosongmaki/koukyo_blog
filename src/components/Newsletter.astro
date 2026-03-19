@@ -1,0 +1,80 @@
+---
+import IconMail from "@/assets/icons/IconMail.svg";
+---
+
+<section
+  id="newsletter"
+  class:list={["pt-8 pb-6"]}
+>
+  <h2 class="text-2xl font-semibold tracking-wide">Newsletter</h2>
+  <p class="mt-2 mb-4 text-foreground/80">
+    订阅邮件列表，第一时间收到新文章通知。不发垃圾邮件，随时退订。
+  </p>
+  <form id="newsletter-form" class="flex gap-2 max-sm:flex-col">
+    <div class="relative flex-1">
+      <IconMail
+        class="absolute top-1/2 left-3 -translate-y-1/2 text-foreground/40"
+        width={18}
+        height={18}
+      />
+      <input
+        type="email"
+        name="email"
+        required
+        placeholder="your@email.com"
+        class="w-full rounded-lg border border-border bg-background py-2.5 pr-4 pl-10 text-foreground placeholder:text-foreground/40 focus:border-accent focus:outline-none"
+      />
+    </div>
+    <button
+      type="submit"
+      class="focus-outline rounded-lg border border-foreground/30 px-6 py-2.5 font-medium text-foreground transition-colors hover:bg-foreground hover:text-background"
+    >
+      订阅
+    </button>
+  </form>
+  <p id="newsletter-msg" class="mt-2 hidden text-sm"></p>
+</section>
+
+<script>
+  document.addEventListener("astro:page-load", () => {
+    const form = document.querySelector("#newsletter-form") as HTMLFormElement;
+    const msg = document.querySelector("#newsletter-msg") as HTMLElement;
+    if (!form || !msg) return;
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const email = new FormData(form).get("email") as string;
+      const btn = form.querySelector("button") as HTMLButtonElement;
+
+      btn.disabled = true;
+      btn.textContent = "提交中...";
+      msg.classList.add("hidden");
+
+      try {
+        const res = await fetch("/api/subscribe", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email }),
+        });
+        const data = await res.json();
+
+        msg.classList.remove("hidden");
+        if (res.ok) {
+          msg.textContent = "🎉 订阅成功！感谢关注。";
+          msg.className = "mt-2 text-sm text-green-600 dark:text-green-400";
+          form.reset();
+        } else {
+          msg.textContent = data.error || "订阅失败，请稍后再试。";
+          msg.className = "mt-2 text-sm text-red-500";
+        }
+      } catch {
+        msg.classList.remove("hidden");
+        msg.textContent = "网络错误，请稍后再试。";
+        msg.className = "mt-2 text-sm text-red-500";
+      } finally {
+        btn.disabled = false;
+        btn.textContent = "订阅";
+      }
+    });
+  });
+</script>
