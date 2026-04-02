@@ -3,7 +3,7 @@ author: koukyo
 pubDatetime: 2026-03-31T09:23:29+08:00
 title: 财务观念与杠杆理论：为什么不打工
 featured: false
-draft: false
+draft: true
 tags:
   - 财务自由
   - 创业
