@@ -2,7 +2,7 @@
 author: koukyo
 pubDatetime: 2026-03-27T12:36:24+08:00
 title: 初出茅庐——第一次创业我栽得很快但醒悟得很慢
-featured: true
+featured: false
 draft: false
 tags:
   - 创业

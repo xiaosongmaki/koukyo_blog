@@ -2,7 +2,7 @@
 author: koukyo
 pubDatetime: 2026-03-19T00:00:00+08:00
 title: 你好世界：关于这个博客
-featured: true
+featured: false
 draft: false
 tags:
   - 自我介绍
