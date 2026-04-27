@@ -2,7 +2,7 @@
 author: koukyo
 pubDatetime: 2026-04-16T18:02:04+08:00
 title: 精益验证实战：一个多月跑完从冷外联到止损的全过程
-featured: true
+featured: false
 draft: false
 tags:
   - 创业
