@@ -12,13 +12,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   const apiKey = process.env.RESEND_API_KEY;
+  const AUDIENCE_NAME = "General";
 
   try {
     const audiencesRes = await fetch("https://api.resend.com/audiences", {
       headers: { Authorization: `Bearer ${apiKey}` },
     });
     const audiencesData = await audiencesRes.json();
-    let audienceId = audiencesData.data?.[0]?.id;
+    let audienceId = audiencesData.data?.find(
+      (a: { id: string; name: string }) => a.name === AUDIENCE_NAME
+    )?.id;
 
     if (!audienceId) {
       const createRes = await fetch("https://api.resend.com/audiences", {
@@ -27,7 +30,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           Authorization: `Bearer ${apiKey}`,
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ name: "Newsletter" }),
+        body: JSON.stringify({ name: AUDIENCE_NAME }),
       });
       const createData = await createRes.json();
       audienceId = createData.id;
