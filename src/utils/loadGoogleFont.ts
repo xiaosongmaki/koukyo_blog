@@ -8,6 +8,7 @@ async function loadGoogleFont(
   const css = await (
     await fetch(API, {
       headers: {
+        // 这个老 Safari UA 会让 Google Fonts 返回 truetype 格式
         "User-Agent":
           "Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10_6_8; de-at) AppleWebKit/533.21.1 (KHTML, like Gecko) Version/5.0.5 Safari/533.21.1",
       },
@@ -18,7 +19,7 @@ async function loadGoogleFont(
     /src: url\((.+?)\) format\('(opentype|truetype)'\)/
   );
 
-  if (!resource) throw new Error("Failed to download dynamic font");
+  if (!resource) throw new Error(`Failed to download dynamic font: ${font}`);
 
   const res = await fetch(resource[1]);
 
@@ -34,18 +35,19 @@ async function loadGoogleFonts(
 ): Promise<
   Array<{ name: string; data: ArrayBuffer; weight: number; style: string }>
 > {
+  // Noto Sans SC 同时覆盖中文和拉丁字符，避免方块。
   const fontsConfig = [
     {
-      name: "IBM Plex Mono",
-      font: "IBM+Plex+Mono",
+      name: "Noto Sans SC",
+      font: "Noto+Sans+SC",
       weight: 400,
       style: "normal",
     },
     {
-      name: "IBM Plex Mono",
-      font: "IBM+Plex+Mono",
+      name: "Noto Sans SC",
+      font: "Noto+Sans+SC",
       weight: 700,
-      style: "bold",
+      style: "normal",
     },
   ];
 
