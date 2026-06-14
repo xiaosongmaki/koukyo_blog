@@ -2,7 +2,7 @@
 author: koukyo
 pubDatetime: 2026-04-27T06:37:42+08:00
 title: 冷启动坚持不下去？因为你没给自己设可测量的中间指标
-featured: true
+featured: false
 draft: false
 tags:
   - 创业
