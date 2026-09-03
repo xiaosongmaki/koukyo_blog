@@ -76,6 +76,9 @@ const { compact = false } = Astro.props;
           msg.textContent = "🎉 订阅成功！感谢关注。";
           msg.className = "mt-2 text-sm text-green-600 dark:text-green-400";
           form.reset();
+          // Identify subscriber and track event in Umami
+          window.umami?.identify(email);
+          window.umami?.track("newsletter-subscribe");
         } else {
           msg.textContent = data.error || "订阅失败，请稍后再试。";
           msg.className = "mt-2 text-sm text-red-500";
