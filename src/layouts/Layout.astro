@@ -142,7 +142,7 @@ const structuredData = {
     }
 
     <!-- Umami Analytics -->
-    <script is:inline data-astro-rerun defer src="https://umami.peguni.com/script.js" data-website-id="b259e1da-dadc-4168-83b8-e3aab495dd3f" data-domains="koukyo.site"></script>
+    <script is:inline data-astro-rerun defer src="https://umami.peguni.com/script.js" data-website-id="b259e1da-dadc-4168-83b8-e3aab495dd3f" data-domains="koukyo.site" data-performance="true"></script>
     <!-- Session replay + heatmaps. No data-astro-rerun: the recorder hooks history itself and must start only once. -->
     <script is:inline defer src="https://umami.peguni.com/recorder.js" data-website-id="b259e1da-dadc-4168-83b8-e3aab495dd3f"></script>
 
@@ -183,5 +183,23 @@ const structuredData = {
 
     <!-- Load full theme logic -->
     <script src="../scripts/theme.ts"></script>
+
+    <script>
+      // Markdown 正文里的链接没法逐个加属性，所以在 document 上统一捕获。
+      // 模块脚本只执行一次，document 在 ClientRouter 切页时保留，监听器不会重复注册。
+      function trackOutbound(event: MouseEvent) {
+        if (event.type === "auxclick" && event.button !== 1) return;
+        const link = (event.target as Element | null)?.closest?.("a[href]");
+        if (!(link instanceof HTMLAnchorElement) || !/^https?:$/.test(link.protocol)) return;
+        if (link.hostname === location.hostname) return;
+        window.umami?.track("outbound", {
+          url: link.href,
+          host: link.hostname,
+          page: location.pathname,
+        });
+      }
+      document.addEventListener("click", trackOutbound, { capture: true });
+      document.addEventListener("auxclick", trackOutbound, { capture: true });
+    </script>
   </body>
 </html>

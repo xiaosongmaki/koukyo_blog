@@ -49,6 +49,17 @@ pnpm run dev       # http://localhost:4321
 | `pnpm run lint` | ESLint 检查 |
 | `docker compose up -d` | 用 Docker 跑开发服务器 |
 
+## 访问统计
+
+Umami 自托管实例 https://umami.peguni.com ，网站 `blog_kyo`（ID `b259e1da-dadc-4168-83b8-e3aab495dd3f`）。跟踪脚本在 `src/layouts/Layout.astro`，`data-domains="koukyo.site"` 让本地和 Vercel 预览不计数；同一处加载的 `recorder.js` 负责会话回放和热力图。`script.js` 带 `data-performance="true"`，采集 Web Vitals（LCP、INP、CLS、FCP、TTFB），在 Performance 标签看。
+
+自定义事件：
+
+- `newsletter-subscribe`：Newsletter 订阅成功（`Newsletter.astro`），同时用邮箱 `identify` 会话。
+- `outbound`：点击站外链接，带 `url`、`host`、`page`（当前路径），监听器在 `Layout.astro`。
+
+后台已保存的报表：Goals「订阅 newsletter-subscribe」「站外点击 outbound」，Funnels「首页 → 订阅」（`/` → `newsletter-subscribe`）和「文章详情 → 订阅」（`/posts/*` → `newsletter-subscribe`），步骤间隔上限 60 分钟。查询数据用 `.agents/skills/umami`。
+
 ## 环境变量
 
 放在 `.env` 里，这个文件不会提交。
