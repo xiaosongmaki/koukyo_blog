@@ -169,9 +169,13 @@ const nextPost =
                     <div class="text-accent/85">{next.post.data.title}</div>
                   </a>
                 ) : (
-                  <span class="text-end text-foreground/60 sm:col-start-2">
-                    这条线暂时到这里
-                  </span>
+                  <a
+                    href="/map"
+                    class="text-end hover:opacity-75 sm:col-start-2"
+                  >
+                    <span class="text-foreground/60">这条线暂时到这里</span>
+                    <div class="text-accent/85">回到 Map 看其他线 →</div>
+                  </a>
                 )}
               </div>
             </div>
@@ -188,37 +192,37 @@ const nextPost =
 
     <Newsletter compact />
 
-    <!-- Previous/Next Post Buttons -->
-    <div data-pagefind-ignore class="grid grid-cols-1 gap-6 sm:grid-cols-2">
-      {
-        prevPost && (
-          <a
-            href={getPath(prevPost.id, prevPost.filePath)}
-            class="flex w-full gap-1 hover:opacity-75"
-          >
-            <IconChevronLeft class="inline-block flex-none rtl:rotate-180" />
-            <div>
-              <span>Previous Post</span>
-              <div class="text-sm text-accent/85">{prevPost.title}</div>
-            </div>
-          </a>
-        )
-      }
-      {
-        nextPost && (
-          <a
-            href={getPath(nextPost.id, nextPost.filePath)}
-            class="flex w-full justify-end gap-1 text-end hover:opacity-75 sm:col-start-2"
-          >
-            <div>
-              <span>Next Post</span>
-              <div class="text-sm text-accent/85">{nextPost.title}</div>
-            </div>
-            <IconChevronRight class="inline-block flex-none rtl:rotate-180" />
-          </a>
-        )
-      }
-    </div>
+    <!-- Chronological fallback for posts that are not on any Map line -->
+    {
+      postLines.length === 0 && (
+        <div data-pagefind-ignore class="grid grid-cols-1 gap-6 sm:grid-cols-2">
+          {prevPost && (
+            <a
+              href={getPath(prevPost.id, prevPost.filePath)}
+              class="flex w-full gap-1 hover:opacity-75"
+            >
+              <IconChevronLeft class="inline-block flex-none rtl:rotate-180" />
+              <div>
+                <span>Previous Post</span>
+                <div class="text-sm text-accent/85">{prevPost.title}</div>
+              </div>
+            </a>
+          )}
+          {nextPost && (
+            <a
+              href={getPath(nextPost.id, nextPost.filePath)}
+              class="flex w-full justify-end gap-1 text-end hover:opacity-75 sm:col-start-2"
+            >
+              <div>
+                <span>Next Post</span>
+                <div class="text-sm text-accent/85">{nextPost.title}</div>
+              </div>
+              <IconChevronRight class="inline-block flex-none rtl:rotate-180" />
+            </a>
+          )}
+        </div>
+      )
+    }
   </main>
   <Footer />
 </Layout>
