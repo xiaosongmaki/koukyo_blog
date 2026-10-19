@@ -5,8 +5,11 @@ import Header from "@/components/Header.astro";
 import Footer from "@/components/Footer.astro";
 import Socials from "@/components/Socials.astro";
 import LinkButton from "@/components/LinkButton.astro";
-import Card from "@/components/Card.astro";
+import dayjs from "dayjs";
+import utc from "dayjs/plugin/utc";
+import timezone from "dayjs/plugin/timezone";
 import { getMap } from "@/utils/getMap";
+import { getPath } from "@/utils/getPath";
 import { MAP_INTRO } from "@/data/map";
 import Newsletter from "@/components/Newsletter.astro";
 import getSortedPosts from "@/utils/getSortedPosts";
@@ -14,6 +17,9 @@ import IconRss from "@/assets/icons/IconRss.svg";
 import IconArrowRight from "@/assets/icons/IconArrowRight.svg";
 import { SITE } from "@/config";
 import { SOCIALS } from "@/constants";
+
+dayjs.extend(utc);
+dayjs.extend(timezone);
 
 const posts = await getCollection("blog");
 
@@ -107,11 +113,28 @@ const { lines } = getMap(posts);
       recentPosts.length > 0 && (
         <section id="recent-posts" class="pt-12 pb-6">
           <h2 class="text-2xl font-semibold tracking-wide">Recent Posts</h2>
-          <ul>
-            {recentPosts.map(
-              (data, index) =>
-                index < SITE.postPerIndex && <Card variant="h3" {...data} />
-            )}
+          <ul class="mt-6 space-y-8">
+            {recentPosts.slice(0, SITE.postPerIndex).map(post => (
+              <li>
+                <a
+                  href={getPath(post.id, post.filePath)}
+                  class="text-lg font-medium text-accent decoration-dashed underline-offset-4 hover:underline"
+                >
+                  {post.data.title}
+                </a>
+                <p class="mt-1.5 leading-relaxed text-foreground/75">
+                  {post.data.description}
+                </p>
+                <time
+                  class="mt-2 block text-xs text-foreground/60 tabular-nums"
+                  datetime={post.data.pubDatetime.toISOString()}
+                >
+                  {dayjs(post.data.pubDatetime)
+                    .tz(SITE.timezone)
+                    .format("YYYY.MM.DD")}
+                </time>
+              </li>
+            ))}
           </ul>
         </section>
       )
