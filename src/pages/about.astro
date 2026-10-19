@@ -6,7 +6,6 @@ import Breadcrumb from "@/components/Breadcrumb.astro";
 import Newsletter from "@/components/Newsletter.astro";
 import IconArrowRight from "@/assets/icons/IconArrowRight.svg";
 import { SITE } from "@/config";
-import { slugifyStr } from "@/utils/slugify";
 
 const timeline = [
   {
@@ -65,17 +64,20 @@ const topics = [
   {
     title: "精益创业",
     text: "真实的创业经历，怎么用最小成本验证想法，踩过的坑",
-    tag: "创业",
+    href: "/map#method",
+    label: "Map · 创业方法",
   },
   {
     title: "财务自由",
     text: "怎么一步步让自己不再被下个月的房租绑架",
-    tag: "财务自由",
+    href: "/map#money",
+    label: "Map · 财务与杠杆",
   },
   {
     title: "日常与思考",
     text: "在日本和回国后的生活，以及关于人生选择的想法",
-    tag: "随笔",
+    href: "/archives",
+    label: "Archives",
   },
 ];
 ---
@@ -194,7 +196,7 @@ const topics = [
           topics.map(topic => (
             <li class="border-b border-dashed border-border last:border-b-0">
               <a
-                href={`/tags/${slugifyStr(topic.tag)}/`}
+                href={topic.href}
                 class="group flex flex-col gap-0.5 py-3 sm:flex-row sm:items-baseline sm:gap-4"
               >
                 <span class="shrink-0 font-medium group-hover:text-accent sm:w-24">
@@ -204,7 +206,7 @@ const topics = [
                   {topic.text}
                 </span>
                 <span class="hidden text-sm text-accent/80 group-hover:text-accent sm:inline">
-                  #{topic.tag}
+                  {topic.label} →
                 </span>
               </a>
             </li>
