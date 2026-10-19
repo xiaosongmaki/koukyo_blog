@@ -1,0 +1,229 @@
+---
+import Layout from "@/layouts/Layout.astro";
+import Header from "@/components/Header.astro";
+import Footer from "@/components/Footer.astro";
+import Breadcrumb from "@/components/Breadcrumb.astro";
+import Newsletter from "@/components/Newsletter.astro";
+import IconArrowRight from "@/assets/icons/IconArrowRight.svg";
+import { SITE } from "@/config";
+import { slugifyStr } from "@/utils/slugify";
+
+const timeline = [
+  {
+    when: "2025.03",
+    where: "东京",
+    text: "经济学硕士毕业，斟酌后辞掉已经内定的咨询公司",
+  },
+  {
+    when: "2025.05",
+    where: "东京",
+    text: "注册日本法人，开始第一次创业",
+  },
+  {
+    when: "2025.07",
+    where: "东京",
+    text: "闭门造车几个月，上门推销时被当头一棒",
+    href: "/posts/first-startup-lessons",
+  },
+  {
+    when: "2025.09",
+    where: "东京",
+    text: "接触到精益创业的理念，相见恨晚",
+    href: "/posts/validate-startup-idea-lean-experiments",
+  },
+  {
+    when: "2026.01",
+    where: "东京",
+    text: "首次产生收入，但认识到低杠杆的工作不值得花时间",
+    href: "/posts/leverage-and-passive-income",
+  },
+  {
+    when: "2026.05",
+    where: "广州",
+    text: "关掉日本的公司，回国继续探索",
+    href: "/posts/dissolving-japanese-company",
+  },
+];
+const projects = [
+  {
+    name: "需求雷达",
+    domain: "reddit-radar.koukyo.site",
+    href: "https://reddit-radar.koukyo.site/?ref=koukyo_blog",
+    body: "每天从 Reddit 上找美国从业者吐槽工作痛点的原话，整理成需求卡片，再用 7 项判据判断值不值得做。给想做出海的小团队看，我自己也在用。",
+    meta: ["中文", "每日更新", "7 项判据"],
+  },
+  {
+    name: "GitHub日報",
+    domain: "gitdayori.com",
+    href: "https://gitdayori.com",
+    body: "面向日本开发者的 GitHub 趋势日报。每天自动挑出值得看的热门仓库，用日文写成一期简报，是我在尝试的被动收入项目。",
+    meta: ["日文", "每日更新", "全自动"],
+  },
+];
+
+const topics = [
+  {
+    title: "精益创业",
+    text: "真实的创业经历，怎么用最小成本验证想法，踩过的坑",
+    tag: "创业",
+  },
+  {
+    title: "财务自由",
+    text: "怎么一步步让自己不再被下个月的房租绑架",
+    tag: "财务自由",
+  },
+  {
+    title: "日常与思考",
+    text: "在日本和回国后的生活，以及关于人生选择的想法",
+    tag: "随笔",
+  },
+];
+---
+
+<Layout
+  title={`关于我 | ${SITE.title}`}
+  description="koukyo 是谁、在做什么，以及这个博客会写什么。"
+>
+  <Header />
+  <Breadcrumb />
+  <main id="main-content" class="app-layout mb-16">
+    <section id="intro" class="border-b border-border pt-4 pb-10">
+      <h1 class="my-4 text-3xl font-bold sm:my-6 sm:text-4xl">关于我</h1>
+      <blockquote
+        class="mb-6 border-s-4 border-accent/80 ps-4 text-lg text-foreground/80"
+      >
+        如果每天早上醒来，你能自己决定今天做什么，这件事值多少钱？
+      </blockquote>
+      <div class="space-y-4 leading-relaxed">
+        <p>
+          我是
+          koukyo。在日本读完经济学硕士后，我辞掉了已经拿到内定的咨询公司，毕业就开始创业。在东京开了一年公司，2026
+          年关掉公司，回到广州。
+        </p>
+        <p>
+          到现在我还没做成一个真正赚钱的产品，但我已经能自己决定每天做什么了。这个博客就是记录这条路上的试错过程。
+        </p>
+      </div>
+
+      <ol class="mt-8 space-y-0">
+        {
+          timeline.map((item, i) => (
+            <li class="relative flex gap-4 ps-6 pb-5 last:pb-0">
+              <span
+                aria-hidden="true"
+                class:list={[
+                  "absolute start-0 top-2 size-2.5 rounded-full",
+                  i === timeline.length - 1
+                    ? "bg-accent"
+                    : "border-2 border-accent bg-background",
+                ]}
+              />
+              {i < timeline.length - 1 && (
+                <span
+                  aria-hidden="true"
+                  class="absolute start-[4.5px] top-5 bottom-0 w-px bg-foreground/15"
+                />
+              )}
+              <div class="w-16 shrink-0 text-sm text-foreground/60 tabular-nums">
+                {item.when}
+                <span class="block text-xs">{item.where}</span>
+              </div>
+              <div class="text-foreground/90">
+                {item.href ? (
+                  <a
+                    href={item.href}
+                    class="decoration-dashed underline-offset-4 hover:text-accent hover:underline"
+                  >
+                    {item.text}
+                  </a>
+                ) : (
+                  item.text
+                )}
+              </div>
+            </li>
+          ))
+        }
+      </ol>
+    </section>
+
+    <section id="projects" class="border-b border-border pt-10 pb-10">
+      <h2 class="text-2xl font-semibold tracking-wide">我在做的事</h2>
+      <ul class="mt-6 grid gap-4 sm:grid-cols-2">
+        {
+          projects.map(project => (
+            <li class="flex">
+              <a
+                href={project.href}
+                target="_blank"
+                rel="noopener"
+                class:list={[
+                  "group flex w-full flex-col rounded-lg border border-border p-5 transition-colors",
+                  "hover:border-accent/60 hover:bg-muted/20",
+                  "focus-visible:border-accent",
+                ]}
+              >
+                <h3 class="text-lg font-semibold text-accent">
+                  {project.name}
+                  <IconArrowRight
+                    aria-hidden="true"
+                    class="ms-0.5 inline-block size-4 -translate-y-px transition-transform group-hover:translate-x-1 rtl:-rotate-180"
+                  />
+                </h3>
+                <span class="mt-0.5 text-xs text-foreground/50">
+                  {project.domain}
+                </span>
+                <p class="mt-3 mb-4 text-[0.95rem] leading-relaxed text-foreground/85">
+                  {project.body}
+                </p>
+                <ul class="mt-auto flex flex-wrap gap-2 text-xs text-foreground/65">
+                  {project.meta.map(m => (
+                    <li class="rounded-full bg-muted/60 px-2.5 py-0.5">{m}</li>
+                  ))}
+                </ul>
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+    </section>
+
+    <section id="topics" class="border-b border-border pt-10 pb-10">
+      <h2 class="text-2xl font-semibold tracking-wide">这里会写什么</h2>
+      <ul class="mt-4">
+        {
+          topics.map(topic => (
+            <li class="border-b border-dashed border-border last:border-b-0">
+              <a
+                href={`/tags/${slugifyStr(topic.tag)}/`}
+                class="group flex flex-col gap-0.5 py-3 sm:flex-row sm:items-baseline sm:gap-4"
+              >
+                <span class="shrink-0 font-medium group-hover:text-accent sm:w-24">
+                  {topic.title}
+                </span>
+                <span class="flex-1 text-sm text-foreground/70">
+                  {topic.text}
+                </span>
+                <span class="hidden text-sm text-accent/80 group-hover:text-accent sm:inline">
+                  #{topic.tag}
+                </span>
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+    </section>
+
+    <section id="contact" class="pt-10">
+      <h2 class="text-2xl font-semibold tracking-wide">保持联系</h2>
+      <p class="mt-3 mb-4 leading-relaxed text-foreground/80">
+        新文章会先发到邮件列表，不发垃圾邮件，随时退订。也欢迎直接写信给我：<a
+          href="mailto:koukyo@koukyo.site"
+          class="text-accent decoration-dashed underline-offset-4 hover:underline"
+          >koukyo@koukyo.site</a
+        >
+      </p>
+      <Newsletter bare />
+    </section>
+  </main>
+  <Footer />
+</Layout>
