@@ -6,7 +6,7 @@ export const SITE = {
   title: "koukyo.",
   ogImage: "og-image.png",
   lightAndDarkMode: true,
-  postPerIndex: 4,
+  postPerIndex: 2,
   postPerPage: 4,
   scheduledPostMargin: 15 * 60 * 1000, // 15 minutes
   showArchives: true,
