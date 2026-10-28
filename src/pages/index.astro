@@ -8,9 +8,7 @@ import LinkButton from "@/components/LinkButton.astro";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
 import timezone from "dayjs/plugin/timezone";
-import { getMap } from "@/utils/getMap";
 import { getPath } from "@/utils/getPath";
-import { MAP_INTRO } from "@/data/map";
 import Newsletter from "@/components/Newsletter.astro";
 import getSortedPosts from "@/utils/getSortedPosts";
 import IconRss from "@/assets/icons/IconRss.svg";
@@ -24,7 +22,7 @@ dayjs.extend(timezone);
 const posts = await getCollection("blog");
 
 const recentPosts = getSortedPosts(posts);
-const { lines } = getMap(posts);
+const featuredPosts = recentPosts.filter(({ data }) => data.featured);
 ---
 
 <Layout>
@@ -64,44 +62,29 @@ const { lines } = getMap(posts);
     </section>
 
     {
-      lines.length > 0 && (
-        <section id="map" class="border-b border-border pt-12 pb-10">
-          <div class="flex items-baseline justify-between gap-4">
-            <h2 class="text-2xl font-semibold tracking-wide">Map</h2>
-            <LinkButton href="/map" class="text-sm">
-              查看完整 Map
-              <IconArrowRight class="inline-block size-4 rtl:-rotate-180" />
-            </LinkButton>
-          </div>
-          <p class="mt-3 leading-relaxed text-foreground/85">{MAP_INTRO}</p>
-          <ul class="mt-8 space-y-6">
-            {lines.map(line => (
+      featuredPosts.length > 0 && (
+        <section id="featured" class="border-b border-border pt-12 pb-10">
+          <h2 class="text-2xl font-semibold tracking-wide">Featured</h2>
+          <ul class="mt-6 space-y-8">
+            {featuredPosts.map(post => (
               <li>
                 <a
-                  href={`/map#${line.id}`}
-                  class="group grid grid-cols-[5.5rem_1fr] items-center gap-x-4 gap-y-1.5 sm:grid-cols-[5.5rem_10.5rem_1fr] sm:gap-x-6"
+                  href={getPath(post.id, post.filePath)}
+                  class="text-lg font-medium text-accent decoration-dashed underline-offset-4 hover:underline"
                 >
-                  <span class="font-medium group-hover:text-accent">
-                    {line.name}
-                  </span>
-                  <span
-                    aria-hidden="true"
-                    class="flex items-center"
-                    title={`${line.stations.length} 站`}
-                  >
-                    {line.stations.map((_, i) => (
-                      <>
-                        {i > 0 && (
-                          <span class="h-0.5 w-7 bg-foreground/20 transition-colors group-hover:bg-accent" />
-                        )}
-                        <span class="size-2.5 rounded-full border-2 border-foreground/40 bg-background transition-colors group-hover:border-accent" />
-                      </>
-                    ))}
-                  </span>
-                  <span class="text-sm text-foreground/60 max-sm:col-start-2">
-                    {line.question}
-                  </span>
+                  {post.data.title}
                 </a>
+                <p class="mt-1.5 leading-relaxed text-foreground/75">
+                  {post.data.description}
+                </p>
+                <time
+                  class="mt-2 block text-xs text-foreground/60 tabular-nums"
+                  datetime={post.data.pubDatetime.toISOString()}
+                >
+                  {dayjs(post.data.pubDatetime)
+                    .tz(SITE.timezone)
+                    .format("YYYY.MM.DD")}
+                </time>
               </li>
             ))}
           </ul>
