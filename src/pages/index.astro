@@ -21,8 +21,9 @@ dayjs.extend(timezone);
 
 const posts = await getCollection("blog");
 
-const recentPosts = getSortedPosts(posts);
-const featuredPosts = recentPosts.filter(({ data }) => data.featured);
+const sortedPosts = getSortedPosts(posts);
+const featuredPosts = sortedPosts.filter(({ data }) => data.featured);
+const recentPosts = sortedPosts.filter(({ data }) => !data.featured);
 ---
 
 <Layout>
