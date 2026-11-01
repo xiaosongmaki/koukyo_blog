@@ -49,14 +49,18 @@ const projects = [
     domain: "reddit-radar.koukyo.site",
     href: "https://reddit-radar.koukyo.site/?ref=koukyo_blog",
     body: "每天从 Reddit 上找美国从业者吐槽工作痛点的原话，整理成需求卡片，再用 7 项判据判断值不值得做。给想做出海的小团队看，我自己也在用。",
-    meta: ["中文", "每日更新", "7 项判据"],
   },
   {
     name: "GitHub日報",
     domain: "gitdayori.com",
     href: "https://gitdayori.com",
     body: "面向日本开发者的 GitHub 趋势日报。每天自动挑出值得看的热门仓库，用日文写成一期简报，是我在尝试的被动收入项目。",
-    meta: ["日文", "每日更新", "全自动"],
+  },
+  {
+    name: "プロンプト手帖",
+    domain: "prompt-techo.com",
+    href: "https://prompt-techo.com/?ref=koukyo_blog",
+    body: "给日本普通上班族的 Prompt 合集。按写邮件、做会议纪要这类工作场景整理，复制就能用，每条都附上 AI 实际的回答。内容由 AI 流水线自动更新，在试 SEO 能不能带来稳定流量。",
   },
 ];
 
@@ -150,38 +154,31 @@ const topics = [
 
     <section id="projects" class="border-b border-border pt-10 pb-10">
       <h2 class="text-2xl font-semibold tracking-wide">我在做的事</h2>
-      <ul class="mt-6 grid gap-4 sm:grid-cols-2">
+      <ul class="mt-4">
         {
           projects.map(project => (
-            <li class="flex">
+            <li class="border-b border-dashed border-border last:border-b-0">
               <a
                 href={project.href}
                 target="_blank"
                 rel="noopener"
-                class:list={[
-                  "group flex w-full flex-col rounded-lg border border-border p-5 transition-colors",
-                  "hover:border-accent/60 hover:bg-muted/20",
-                  "focus-visible:border-accent",
-                ]}
+                class="group block py-4"
               >
-                <h3 class="text-lg font-semibold text-accent">
-                  {project.name}
-                  <IconArrowRight
-                    aria-hidden="true"
-                    class="ms-0.5 inline-block size-4 -translate-y-px transition-transform group-hover:translate-x-1 rtl:-rotate-180"
-                  />
-                </h3>
-                <span class="mt-0.5 text-xs text-foreground/50">
-                  {project.domain}
-                </span>
-                <p class="mt-3 mb-4 text-[0.95rem] leading-relaxed text-foreground/85">
+                <div class="flex flex-wrap items-baseline justify-between gap-x-4">
+                  <h3 class="font-semibold group-hover:text-accent">
+                    {project.name}
+                    <IconArrowRight
+                      aria-hidden="true"
+                      class="ms-0.5 inline-block size-4 -translate-y-px text-accent transition-transform group-hover:translate-x-1 rtl:-rotate-180"
+                    />
+                  </h3>
+                  <span class="text-sm text-foreground/50 group-hover:text-accent/80">
+                    {project.domain}
+                  </span>
+                </div>
+                <p class="mt-1.5 text-sm leading-relaxed text-foreground/70">
                   {project.body}
                 </p>
-                <ul class="mt-auto flex flex-wrap gap-2 text-xs text-foreground/65">
-                  {project.meta.map(m => (
-                    <li class="rounded-full bg-muted/60 px-2.5 py-0.5">{m}</li>
-                  ))}
-                </ul>
               </a>
             </li>
           ))
