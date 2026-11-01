@@ -29,8 +29,8 @@ export function getPath(
 
   // If not inside the sub-dir, simply return the file path
   if (!pathSegments || pathSegments.length < 1) {
-    return [basePath, slug].join("/");
+    return [basePath, slug].join("/") + (includeBase ? "/" : "");
   }
 
-  return [basePath, ...pathSegments, slug].join("/");
+  return [basePath, ...pathSegments, slug].join("/") + (includeBase ? "/" : "");
 }

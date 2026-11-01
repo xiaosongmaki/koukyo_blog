@@ -1,6 +1,7 @@
 {
+  "trailingSlash": true,
   "redirects": [
-    { "source": "/tags", "destination": "/map", "permanent": true },
-    { "source": "/tags/:path*", "destination": "/map", "permanent": true }
+    { "source": "/tags", "destination": "/map/", "permanent": true },
+    { "source": "/tags/:path*", "destination": "/map/", "permanent": true }
   ]
 }
