@@ -86,6 +86,11 @@ export const MAP_LINES: MapLine[] = [
         kind: "方法",
         takeaway: "没有外部反馈的冷启动期，用中间指标撑下去",
       },
+      {
+        slug: "observation-frequency-noise",
+        kind: "方法",
+        takeaway: "指标搭好之后，多久看一次同样重要",
+      },
     ],
   },
   {
@@ -109,6 +114,11 @@ export const MAP_LINES: MapLine[] = [
         slug: "hk-investment-accounts-lower-fees",
         kind: "方法",
         takeaway: "手续费在 30 年复利下能吃掉多少，以及怎么在香港开户",
+      },
+      {
+        slug: "observation-frequency-noise",
+        kind: "方法",
+        takeaway: "每天看收益，93% 是噪音，心理账户反而亏",
       },
     ],
   },

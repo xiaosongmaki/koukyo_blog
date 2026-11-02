@@ -2,7 +2,7 @@
 author: koukyo
 pubDatetime: 2026-06-11T08:36:52+08:00
 title: 我解散了日本的公司
-featured: true
+featured: false
 draft: false
 tags:
   - 创业
