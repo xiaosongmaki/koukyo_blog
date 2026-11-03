@@ -1,0 +1,236 @@
+---
+import { getCollection } from "astro:content";
+import Layout from "@/layouts/Layout.astro";
+import Header from "@/components/Header.astro";
+import Footer from "@/components/Footer.astro";
+import IconArrowRight from "@/assets/icons/IconArrowRight.svg";
+import IconArrowLeft from "@/assets/icons/IconArrowLeft.svg";
+import { getMap } from "@/utils/getMap";
+import { getPath } from "@/utils/getPath";
+import { OFFERS } from "@/data/newsletters";
+import { SITE } from "@/config";
+
+// Newsletter.astro 订阅成功后跳到这里，邮箱和一次性 token 经 sessionStorage 传过来，不放进 URL。
+// 直接打开时没有邮箱，「你可能也会感兴趣」只显示链接，不显示一键订阅。
+const { lines, startHere } = getMap(await getCollection("blog"));
+---
+
+<Layout
+  title={`订阅好了 | ${SITE.title}`}
+  description="感谢订阅 koukyo. 的邮件列表。"
+  noindex
+>
+  <Header />
+  <main id="main-content" data-thanks class="app-layout mb-16">
+    <section id="done" class="border-b border-border pt-12 pb-10">
+      <p class="inline-flex items-center gap-2 text-sm text-foreground/65">
+        <span
+          aria-hidden="true"
+          class="grid size-4 place-items-center rounded-full bg-accent text-[10px] leading-none text-background"
+          >✓</span
+        >
+        已订阅 {SITE.title}
+      </p>
+      <h1 class="my-4 text-3xl font-bold sm:text-4xl">订阅好了，谢谢你</h1>
+      <div class="space-y-3 leading-relaxed text-foreground/80">
+        <p>有新文章时才发邮件，不会天天打扰你。</p>
+        <p>
+          第一封没收到的话，看一下垃圾邮件箱，标记成「不是垃圾邮件」，之后就能正常收到了。
+        </p>
+      </div>
+      <a
+        data-back
+        hidden
+        href="/"
+        class="mt-6 inline-flex items-center gap-1 text-sm text-accent decoration-dashed underline-offset-4 hover:underline"
+      >
+        <IconArrowLeft class="size-4 rtl:rotate-180" aria-hidden="true" />
+        回到刚才在读的页面
+      </a>
+    </section>
+
+    {
+      startHere.length > 0 && (
+        <section id="start-here" class="border-b border-border pt-10 pb-10">
+          <h2 class="text-2xl font-semibold tracking-wide">先读这几篇</h2>
+          <p class="mt-2 text-sm text-foreground/65">
+            等下一封邮件之前，可以从这里开始。
+          </p>
+          <ol class="mt-5 space-y-4">
+            {startHere.map((post, i) => (
+              <li class="flex gap-4">
+                <span class="w-5 shrink-0 text-lg font-semibold text-accent tabular-nums">
+                  {i + 1}
+                </span>
+                <div>
+                  <a
+                    href={getPath(post.id, post.filePath)}
+                    class="font-medium text-accent decoration-dashed underline-offset-4 hover:underline"
+                  >
+                    {post.data.title}
+                  </a>
+                  <p class="mt-1 text-sm text-foreground/75">
+                    {post.data.description}
+                  </p>
+                </div>
+              </li>
+            ))}
+          </ol>
+
+          {lines.length > 0 && (
+            <div class="mt-8">
+              <p class="text-sm text-foreground/65">或者按主题读：</p>
+              <ul class="mt-3 flex flex-wrap gap-2">
+                {lines.map(line => (
+                  <li style={`--line:${line.color}`}>
+                    <a
+                      href={`/map/#${line.id}`}
+                      class="inline-flex items-center gap-2 rounded-full border border-border px-3 py-1 text-sm transition-colors hover:border-(--line) hover:text-accent"
+                    >
+                      <span
+                        aria-hidden="true"
+                        class="h-1.5 w-4 rounded-full bg-(--line)"
+                      />
+                      {line.name}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </section>
+      )
+    }
+
+    {
+      OFFERS.length > 0 && (
+        <section id="more" class="pt-10">
+          <h2 class="text-2xl font-semibold tracking-wide">你可能也会感兴趣</h2>
+          <p class="mt-2 text-sm text-foreground/65">
+            我还在做的其他邮件，和博客分开发，各自都能随时退订。
+          </p>
+          <ul class="mt-5 space-y-3">
+            {OFFERS.map(offer => (
+              <li class="rounded-lg border border-border p-4">
+                <a
+                  href={offer.href}
+                  target="_blank"
+                  rel="noopener"
+                  class="group block"
+                >
+                  <div class="flex flex-wrap items-baseline justify-between gap-x-4">
+                    <h3 class="font-semibold group-hover:text-accent">
+                      {offer.name}
+                      <IconArrowRight
+                        aria-hidden="true"
+                        class="ms-0.5 inline-block size-4 -translate-y-px text-accent transition-transform group-hover:translate-x-1 rtl:-rotate-180"
+                      />
+                    </h3>
+                    <span class="text-sm text-foreground/50 group-hover:text-accent/80">
+                      {offer.domain}
+                    </span>
+                  </div>
+                  <p class="mt-1.5 text-sm leading-relaxed text-foreground/70">
+                    {offer.body}
+                  </p>
+                  <p class="mt-2 text-xs text-foreground/55">
+                    {offer.cadence} · 免费
+                  </p>
+                </a>
+                {offer.oneClick && (
+                  <div data-optin={offer.id} hidden class="mt-3">
+                    <button
+                      type="button"
+                      role="checkbox"
+                      aria-checked="false"
+                      data-state="idle"
+                      class="group inline-flex items-center gap-2 rounded-full border border-border px-3 py-1.5 text-sm text-foreground/80 transition-colors hover:border-accent hover:text-accent data-[state=done]:cursor-default data-[state=done]:border-accent/40 data-[state=done]:text-accent data-[state=loading]:cursor-wait data-[state=loading]:opacity-70"
+                    >
+                      <span
+                        aria-hidden="true"
+                        class="grid size-4 place-items-center rounded border border-foreground/40 text-[10px] leading-none text-transparent transition-colors group-hover:border-accent group-data-[state=done]:border-accent group-data-[state=done]:bg-accent group-data-[state=done]:text-background"
+                      >
+                        ✓
+                      </span>
+                      <span data-label>用同一个邮箱订阅</span>
+                    </button>
+                    <p
+                      data-error
+                      role="alert"
+                      aria-live="polite"
+                      class="mt-2 text-sm text-red-500 empty:hidden"
+                    />
+                  </div>
+                )}
+              </li>
+            ))}
+          </ul>
+        </section>
+      )
+    }
+  </main>
+  <Footer />
+</Layout>
+
+<script>
+  const STORAGE_KEY = "kyo-subscribed";
+  const LABEL = "用同一个邮箱订阅";
+
+  type Subscribed = { email?: string; token?: string; from?: string };
+
+  function readSubscribed(): Subscribed {
+    try {
+      return JSON.parse(sessionStorage.getItem(STORAGE_KEY) ?? "{}");
+    } catch {
+      return {};
+    }
+  }
+
+  document.addEventListener("astro:page-load", () => {
+    if (!document.querySelector("[data-thanks]")) return;
+    const { email, token, from } = readSubscribed();
+
+    const back = document.querySelector<HTMLAnchorElement>("[data-back]");
+    if (back && from?.startsWith("/") && !from.startsWith("/thanks")) {
+      back.href = from;
+      back.hidden = false;
+    }
+
+    if (!email || !token) return;
+
+    document.querySelectorAll<HTMLElement>("[data-optin]").forEach(box => {
+      const offer = box.dataset.optin!;
+      const button = box.querySelector("button")!;
+      const label = box.querySelector<HTMLElement>("[data-label]")!;
+      const error = box.querySelector<HTMLElement>("[data-error]")!;
+      box.hidden = false;
+
+      button.addEventListener("click", async () => {
+        if (button.dataset.state !== "idle") return;
+        button.dataset.state = "loading";
+        label.textContent = "提交中...";
+        error.textContent = "";
+        try {
+          const res = await fetch("/api/subscribe", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email, token, also: offer }),
+          });
+          const data = (await res.json().catch(() => ({}))) as {
+            error?: string;
+          };
+          if (!res.ok) throw new Error(data.error || "订阅失败，请稍后再试");
+          window.umami?.track("offer-subscribe", { offer });
+          button.dataset.state = "done";
+          button.setAttribute("aria-checked", "true");
+          label.textContent = "已用同一个邮箱订阅";
+        } catch (err) {
+          button.dataset.state = "idle";
+          label.textContent = LABEL;
+          error.textContent =
+            err instanceof Error ? err.message : "网络错误，请稍后再试";
+        }
+      });
+    });
+  });
+</script>

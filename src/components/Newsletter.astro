@@ -55,6 +55,8 @@ const { compact = false, bare = false } = Astro.props;
 </section>
 
 <script>
+  import { navigate } from "astro:transitions/client";
+
   document.addEventListener("astro:page-load", () => {
     const form = document.querySelector("#newsletter-form") as HTMLFormElement;
     const msg = document.querySelector("#newsletter-msg") as HTMLElement;
@@ -77,18 +79,21 @@ const { compact = false, bare = false } = Astro.props;
         });
         const data = await res.json();
 
-        msg.classList.remove("hidden");
         if (res.ok) {
-          msg.textContent = "🎉 订阅成功！感谢关注。";
-          msg.className = "mt-2 text-sm text-green-600 dark:text-green-400";
-          form.reset();
           // Identify subscriber and track event in Umami
           window.umami?.identify(email);
           window.umami?.track("newsletter-subscribe");
-        } else {
-          msg.textContent = data.error || "订阅失败，请稍后再试。";
-          msg.className = "mt-2 text-sm text-red-500";
+          // /thanks reads this to offer one-click signups for other newsletters
+          sessionStorage.setItem(
+            "kyo-subscribed",
+            JSON.stringify({ email, token: data.token, from: location.pathname })
+          );
+          await navigate("/thanks/");
+          return;
         }
+        msg.classList.remove("hidden");
+        msg.textContent = data.error || "订阅失败，请稍后再试。";
+        msg.className = "mt-2 text-sm text-red-500";
       } catch {
         msg.classList.remove("hidden");
         msg.textContent = "网络错误，请稍后再试。";
