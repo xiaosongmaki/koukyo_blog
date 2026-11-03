@@ -26,9 +26,17 @@ const { lines, startHere } = getMap(await getCollection("blog"));
       <p class="inline-flex items-center gap-2 text-sm text-foreground/65">
         <span
           aria-hidden="true"
-          class="grid size-4 place-items-center rounded-full bg-accent text-[10px] leading-none text-background"
-          >✓</span
+          class="done-badge grid size-5 place-items-center rounded-full bg-accent text-background"
         >
+          <svg viewBox="0 0 16 16" class="size-3" fill="none">
+            <path
+              d="M3.5 8.5l3 3 6-7"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"></path>
+          </svg>
+        </span>
         已订阅 {SITE.title}
       </p>
       <h1 class="my-4 text-3xl font-bold sm:text-4xl">订阅好了，谢谢你</h1>
@@ -180,8 +188,63 @@ const { lines, startHere } = getMap(await getCollection("blog"));
   <Footer />
 </Layout>
 
-<script>
-  const STORAGE_KEY = "kyo-subscribed";
+<style>
+  .done-badge {
+    position: relative;
+    animation: badge-pop 450ms cubic-bezier(0.34, 1.56, 0.64, 1) 150ms both;
+  }
+  .done-badge path {
+    stroke-dasharray: 16;
+    stroke-dashoffset: 16;
+    animation: check-draw 350ms ease-out 450ms forwards;
+  }
+  .done-badge::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    box-shadow: 0 0 0 0 var(--accent);
+    animation: badge-ring 700ms ease-out 450ms both;
+  }
+  @keyframes badge-pop {
+    from {
+      transform: scale(0);
+      opacity: 0;
+    }
+    to {
+      transform: scale(1);
+      opacity: 1;
+    }
+  }
+  @keyframes check-draw {
+    to {
+      stroke-dashoffset: 0;
+    }
+  }
+  @keyframes badge-ring {
+    from {
+      opacity: 0.5;
+      box-shadow: 0 0 0 0 var(--accent);
+    }
+    to {
+      opacity: 0;
+      box-shadow: 0 0 0 8px var(--accent);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .done-badge,
+    .done-badge::after,
+    .done-badge path {
+      animation: none;
+    }
+    .done-badge path {
+      stroke-dashoffset: 0;
+    }
+  }
+</style>
+
+<script>  const STORAGE_KEY = "kyo-subscribed";
   const LABEL = "一键订阅";
 
   type Subscribed = { email?: string; token?: string; from?: string };
