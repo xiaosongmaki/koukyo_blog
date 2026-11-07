@@ -99,7 +99,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(405).json({ error: "Method not allowed" });
   }
 
-  const { email: rawEmail, also, token } = req.body ?? {};
+  const { email: rawEmail, also, token, website } = req.body ?? {};
 
   if (!rawEmail || typeof rawEmail !== "string") {
     return res.status(400).json({ error: "请输入邮箱地址" });
@@ -120,6 +120,32 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(result.status).json(result.body);
     } catch {
       return res.status(502).json({ error: "订阅失败，请稍后再试" });
+    }
+  }
+
+  if (typeof website === "string" && website.trim()) {
+    return res.status(200).json({ message: "订阅成功！" });
+  }
+  const secret = process.env.TURNSTILE_SECRET_KEY;
+  if (!secret && process.env.VERCEL_ENV === "production") {
+    return res.status(503).json({ error: "暂时无法订阅，请稍后再试" });
+  }
+  if (secret) {
+    if (typeof token !== "string" || !token || token.length > 2048) {
+      return res.status(400).json({ error: "请完成人机验证后重试" });
+    }
+    try {
+      const verification = await fetch("https://challenges.cloudflare.com/turnstile/v0/siteverify", {
+        method: "POST",
+        body: new URLSearchParams({ secret, response: token }),
+        signal: AbortSignal.timeout(10_000),
+      });
+      const result = await verification.json();
+      if (!verification.ok || result.success !== true) {
+        return res.status(400).json({ error: "人机验证失败，请重试" });
+      }
+    } catch {
+      return res.status(502).json({ error: "验证服务暂时不可用，请稍后再试" });
     }
   }
 

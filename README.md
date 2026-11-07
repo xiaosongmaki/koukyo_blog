@@ -78,6 +78,8 @@ Umami 自托管实例 https://umami.peguni.com ，网站 `blog_kyo`（ID `b259e1
 
 | 变量 | 用途 |
 | :--- | :--- |
+| `PUBLIC_TURNSTILE_SITE_KEY` | Cloudflare Turnstile 公钥，构建时注入前端 |
+| `TURNSTILE_SECRET_KEY` | Turnstile 服务端验证密钥；production 缺失时拒绝订阅 |
 | `RESEND_API_KEY` | 订阅接口调用 Resend 时使用，也用来签发感谢页的一键订阅 token |
 | `WINDMILL_RADAR_SUBSCRIBE_TOKEN` | 只能运行 `f/passive_income/reddit_radar/reddit_radar_subscribe` 的 Windmill token，感谢页一键订阅需求雷达时使用；可以和 reddit-radar 项目的 `WINDMILL_SUBSCRIBE_TOKEN` 用同一个值 |
 | `PUBLIC_GOOGLE_SITE_VERIFICATION` | 可选，Google Search Console 站点验证 |
@@ -85,3 +87,5 @@ Umami 自托管实例 https://umami.peguni.com ，网站 `blog_kyo`（ID `b259e1
 ## 许可
 
 代码沿用 AstroPaper 的 MIT License，见 [LICENSE](LICENSE)。文章版权归作者所有。
+
+首页、文章末尾和 About 页使用同一个 Newsletter 表单。普通订阅经过蜜罐和 [Cloudflare Turnstile 服务端验证](https://developers.cloudflare.com/turnstile/get-started/server-side-validation/)；感谢页的一键订阅仍验证邮箱绑定的 HMAC token。Turnstile widget 限定 koukyo.site / www.koukyo.site；预览环境不配置密钥，可直接测试订阅流程。

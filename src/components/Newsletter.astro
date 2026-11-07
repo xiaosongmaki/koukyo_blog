@@ -1,107 +1,254 @@
 ---
-import IconMail from "@/assets/icons/IconMail.svg";
-
-interface Props {
-  compact?: boolean;
-  bare?: boolean;
-}
-
-const { compact = false, bare = false } = Astro.props;
+// Shared across the home page, post endings and About.
 ---
 
-<section
-  id="newsletter"
-  class:list={[bare ? "" : compact ? "py-6 text-center" : "pt-8 pb-6"]}
->
-  {!bare && (
-  <>
-  <h2 class:list={[compact ? "text-base font-medium" : "text-2xl font-semibold tracking-wide"]}>
-    {compact ? "📮 订阅通讯" : "Newsletter"}
-  </h2>
-  <p class:list={["mt-2 mb-4", compact ? "text-sm text-foreground/60" : "text-foreground/80"]}>
-    {compact
-      ? "分享真实的创业经历与思考，没有废话随时退订"
-      : "订阅邮件列表，第一时间收到新文章通知。不发垃圾邮件，随时退订。"}
+<section id="newsletter" class="newsletter" aria-labelledby="newsletter-title">
+  <h2 id="newsletter-title">下一篇，寄给你。</h2>
+  <p class="newsletter-copy">
+    关于创业、财务自由，以及回国后的生活。<br />有新文章时，写信告诉你。
   </p>
-  </>
-  )}
-  <form id="newsletter-form" class:list={[
-    "flex items-stretch rounded-full border border-border max-sm:flex-col max-sm:gap-2 max-sm:rounded-none max-sm:border-none",
-    compact ? "mx-auto max-w-md bg-muted/30 max-sm:bg-transparent" : "bg-background/50 max-sm:bg-transparent",
-    bare && "sm:max-w-md",
-  ]}>
-    <div class="relative flex flex-1 items-center pl-4 max-sm:w-full max-sm:pl-0">
-      <IconMail
-        class="absolute top-1/2 left-4 -translate-y-1/2 text-foreground/30"
-        width={16}
-        height={16}
-      />
-      <input
-        type="email"
-        name="email"
-        required
-        placeholder="your@email.com"
-        class="w-full border-none bg-transparent py-2.5 pr-2 pl-6 text-sm text-foreground placeholder:text-foreground/30 focus:outline-none max-sm:rounded-lg max-sm:border max-sm:border-border max-sm:bg-muted/30 max-sm:py-3 max-sm:pl-10"
-      />
+  <form
+    data-newsletter
+    data-sitekey={import.meta.env.PUBLIC_TURNSTILE_SITE_KEY ?? ""}
+  >
+    <div class="newsletter-fields">
+      <label class="newsletter-email">
+        <span class="sr-only">邮箱地址</span>
+        <input
+          type="email"
+          name="email"
+          required
+          autocomplete="email"
+          inputmode="email"
+          maxlength="254"
+          placeholder="你的邮箱地址"
+        />
+      </label>
+      <button type="submit">订阅通讯</button>
     </div>
-    <button
-      type="submit"
-      class="focus-outline m-1 rounded-full bg-foreground/90 px-5 py-2 text-sm font-medium text-background transition-colors hover:bg-foreground max-sm:m-0 max-sm:rounded-lg max-sm:py-3"
+    <div class="absolute -left-[9999px]" aria-hidden="true">
+      <label
+        >Website<input
+          type="text"
+          name="website"
+          tabindex="-1"
+          autocomplete="off"
+        /></label
+      >
+    </div>
+    <div data-turnstile class="mt-3 empty:hidden"></div>
+    <p
+      data-message
+      class="mt-2 text-sm text-red-500 empty:hidden"
+      role="alert"
+      aria-live="polite"
     >
-      订阅
-    </button>
+    </p>
+    <p class="newsletter-note">免费订阅，随时退订。</p>
   </form>
-  <p id="newsletter-msg" class="mt-2 hidden text-sm"></p>
 </section>
 
 <script>
   import { navigate } from "astro:transitions/client";
 
+  type Turnstile = {
+    render: (el: HTMLElement, options: Record<string, unknown>) => string;
+    getResponse: (id: string) => string | undefined;
+    reset: (id: string) => void;
+    remove: (id: string) => void;
+  };
+  declare global {
+    interface Window {
+      turnstile?: Turnstile;
+      __kyoTurnstileReady?: () => void;
+    }
+  }
+  const widgets = new Map<HTMLFormElement, string>();
+  function renderWidgets() {
+    if (!window.turnstile) return;
+    for (const form of document.querySelectorAll<HTMLFormElement>(
+      "[data-newsletter]"
+    )) {
+      const slot = form.querySelector<HTMLElement>("[data-turnstile]");
+      if (!slot || !form.dataset.sitekey || widgets.has(form)) continue;
+      widgets.set(
+        form,
+        window.turnstile.render(slot, {
+          sitekey: form.dataset.sitekey,
+          appearance: "interaction-only",
+          theme: "auto",
+          language: "zh-cn",
+          size: "flexible",
+        })
+      );
+    }
+  }
+  document.addEventListener("astro:before-swap", () => {
+    for (const id of widgets.values()) window.turnstile?.remove(id);
+    widgets.clear();
+  });
   document.addEventListener("astro:page-load", () => {
-    const form = document.querySelector("#newsletter-form") as HTMLFormElement;
-    const msg = document.querySelector("#newsletter-msg") as HTMLElement;
-    if (!form || !msg) return;
+    window.__kyoTurnstileReady = renderWidgets;
+    if (
+      document.querySelector(
+        "[data-newsletter][data-sitekey]:not([data-sitekey=''])"
+      ) &&
+      !window.turnstile &&
+      !document.getElementById("kyo-turnstile-script")
+    ) {
+      const script = document.createElement("script");
+      script.id = "kyo-turnstile-script";
+      script.src =
+        "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit&onload=__kyoTurnstileReady";
+      script.async = true;
+      document.head.appendChild(script);
+    }
+    renderWidgets();
+    for (const form of document.querySelectorAll<HTMLFormElement>(
+      "[data-newsletter]"
+    )) {
+      if (form.dataset.bound) continue;
+      form.dataset.bound = "true";
+      const msg = form.querySelector<HTMLElement>("[data-message]")!;
+      form.addEventListener("submit", async e => {
+        e.preventDefault();
+        const email = new FormData(form).get("email") as string;
+        const btn = form.querySelector("button") as HTMLButtonElement;
 
-    form.addEventListener("submit", async (e) => {
-      e.preventDefault();
-      const email = new FormData(form).get("email") as string;
-      const btn = form.querySelector("button") as HTMLButtonElement;
-
-      btn.disabled = true;
-      btn.textContent = "提交中...";
-      msg.classList.add("hidden");
-
-      try {
-        const res = await fetch("/api/subscribe", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email }),
-        });
-        const data = await res.json();
-
-        if (res.ok) {
-          // Identify subscriber and track event in Umami
-          window.umami?.identify(email);
-          window.umami?.track("newsletter-subscribe");
-          // /thanks reads this to offer one-click signups for other newsletters
-          sessionStorage.setItem(
-            "kyo-subscribed",
-            JSON.stringify({ email, token: data.token, from: location.pathname })
-          );
-          await navigate("/thanks/");
+        const widgetId = widgets.get(form);
+        const token = widgetId ? window.turnstile?.getResponse(widgetId) : "";
+        if (form.dataset.sitekey && !token) {
+          msg.textContent = "请完成人机验证，或稍等几秒后重试。";
           return;
         }
-        msg.classList.remove("hidden");
-        msg.textContent = data.error || "订阅失败，请稍后再试。";
-        msg.className = "mt-2 text-sm text-red-500";
-      } catch {
-        msg.classList.remove("hidden");
-        msg.textContent = "网络错误，请稍后再试。";
-        msg.className = "mt-2 text-sm text-red-500";
-      } finally {
-        btn.disabled = false;
-        btn.textContent = "订阅";
-      }
-    });
+        btn.disabled = true;
+        btn.textContent = "提交中...";
+        msg.textContent = "";
+
+        try {
+          const res = await fetch("/api/subscribe", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              email,
+              token,
+              website: new FormData(form).get("website"),
+            }),
+          });
+          const data = await res.json();
+
+          if (res.ok) {
+            // Identify subscriber and track event in Umami
+            window.umami?.identify(email);
+            window.umami?.track("newsletter-subscribe");
+            // /thanks reads this to offer one-click signups for other newsletters
+            sessionStorage.setItem(
+              "kyo-subscribed",
+              JSON.stringify({
+                email,
+                token: data.token,
+                from: location.pathname,
+              })
+            );
+            await navigate("/thanks/");
+            return;
+          }
+          msg.textContent = data.error || "订阅失败，请稍后再试。";
+          msg.className = "mt-2 text-sm text-red-500";
+        } catch {
+          msg.textContent = "网络错误，请稍后再试。";
+          msg.className = "mt-2 text-sm text-red-500";
+        } finally {
+          if (widgetId && widgets.get(form) === widgetId)
+            window.turnstile?.reset(widgetId);
+          btn.disabled = false;
+          btn.textContent = "订阅通讯";
+        }
+      });
+    }
   });
 </script>
+
+<style>
+  .newsletter {
+    margin-block: 2.5rem;
+    padding: clamp(1.5rem, 4vw, 2.5rem);
+    background: color-mix(in srgb, var(--accent) 6%, var(--background));
+    color: var(--foreground);
+  }
+  .newsletter h2 {
+    margin: 0;
+    font-size: clamp(1.625rem, 3vw, 2rem);
+    font-weight: 600;
+    line-height: 1.35;
+    letter-spacing: -0.025em;
+  }
+  .newsletter-copy {
+    margin: 1rem 0 1.5rem;
+    font-size: 1rem;
+    line-height: 1.8;
+  }
+  .newsletter-fields {
+    display: flex;
+    gap: 0.5rem;
+  }
+  .newsletter-email {
+    flex: 1;
+    min-width: 0;
+  }
+  .newsletter input[type="email"] {
+    width: 100%;
+    height: 3.25rem;
+    padding: 0.75rem 1rem;
+    border: 1px solid color-mix(in srgb, var(--foreground) 20%, transparent);
+    border-radius: 0;
+    background: var(--background);
+    color: var(--foreground);
+    font: inherit;
+    font-size: 1rem;
+  }
+  .newsletter input::placeholder {
+    color: color-mix(in srgb, var(--foreground) 60%, var(--background));
+  }
+  .newsletter button {
+    height: 3.25rem;
+    flex-shrink: 0;
+    padding-inline: clamp(1rem, 3vw, 1.75rem);
+    border: 0;
+    border-radius: 0;
+    background: var(--accent);
+    color: var(--background);
+    font: inherit;
+    font-size: 1rem;
+    font-weight: 600;
+    transition:
+      opacity 150ms,
+      transform 150ms;
+  }
+  .newsletter button:hover {
+    opacity: 0.85;
+  }
+  .newsletter button:active {
+    transform: translateY(1px);
+  }
+  .newsletter button:disabled {
+    opacity: 0.5;
+    cursor: wait;
+  }
+  .newsletter input:focus-visible,
+  .newsletter button:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 3px;
+  }
+  .newsletter-note {
+    margin: 0.875rem 0 0;
+    font-size: 0.875rem;
+    color: color-mix(in srgb, var(--foreground) 70%, var(--background));
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .newsletter button {
+      transition: none;
+      transform: none;
+    }
+  }
+</style>
