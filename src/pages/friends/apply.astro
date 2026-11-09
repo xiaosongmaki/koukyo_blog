@@ -1,0 +1,189 @@
+---
+import Main from "@/layouts/Main.astro";
+import Layout from "@/layouts/Layout.astro";
+import Header from "@/components/Header.astro";
+import Footer from "@/components/Footer.astro";
+import FriendCard from "@/components/FriendCard.astro";
+import IconCopy from "@/assets/icons/IconCopy.svg";
+import IconCheck from "@/assets/icons/IconCheck.svg";
+import { MY_CARD } from "@/data/friends";
+import { SITE } from "@/config";
+
+const welcome = [
+  "有自己的域名，文章是你自己写的",
+  "写自己的经历和想法。创业、独立开发、出海、副业、理财、职业选择、在异国生活，写这些话题的会更合适。别的主题也很好，能读出你自己的想法就行",
+  "还在更新：大概有 10 篇以上文章，最近半年写过新的",
+  "开了 HTTPS",
+];
+
+const decline = [
+  "AI 批量生成、搬运或采集的内容",
+  "主要用来放广告、导流或卖课的站点",
+  "以教程和笔记合集为主的博客。写得好的有很多，只是和这里的内容不太搭",
+  "导航站和公司官网",
+  "违法、色情、赌博相关的内容",
+];
+
+const steps = [
+  "如果还没读过，可以先看几篇我的文章，觉得合得来再申请。",
+  "在你的友链页加上本站，信息在下面。",
+  "发邮件到 koukyo@koukyo.site，标题写「友链申请」，附上博客名称、链接、头像地址和一句话简介。如果能说说读过哪篇，或者为什么想交换，那就更好了，我会非常感谢！",
+  "收到后我会去你的博客逛逛，读读你的文章，然后回信。",
+];
+
+const myInfo = [
+  { label: "名称", value: MY_CARD.name },
+  { label: "链接", value: MY_CARD.href },
+  { label: "头像", value: MY_CARD.avatar },
+  { label: "简介", value: MY_CARD.desc },
+];
+
+const allInfo = myInfo.map(item => `${item.label}：${item.value}`).join("\n");
+---
+
+<Layout
+  title={`交换友链 | ${SITE.title}`}
+  description="想和 koukyo 交换友链的话，这里写了什么样的博客合得来，以及怎么申请。"
+>
+  <Header />
+  <Main pageTitle="交换友链">
+    <div class="space-y-3 leading-relaxed text-foreground/85">
+      <p>我希望这里放的，是我自己平时也会去读的博客。</p>
+      <p>
+        如果你读过这里的文章，感觉有点共鸣的话，很欢迎来交换。下面是几点小要求。
+      </p>
+    </div>
+
+    <section class="mt-10 border-t border-border pt-8">
+      <h2 class="text-xl font-semibold tracking-wide">大概会合得来的博客</h2>
+      <ul class="mt-4 space-y-2.5">
+        {
+          welcome.map(item => (
+            <li class="flex gap-3 leading-relaxed">
+              <span aria-hidden="true" class="shrink-0 text-accent">
+                ✓
+              </span>
+              <span class="text-foreground/85">{item}</span>
+            </li>
+          ))
+        }
+      </ul>
+    </section>
+
+    <section class="mt-10 border-t border-border pt-8">
+      <h2 class="text-xl font-semibold tracking-wide">这几类可能不太合适</h2>
+      <ul class="mt-4 space-y-2.5">
+        {
+          decline.map(item => (
+            <li class="flex gap-3 leading-relaxed">
+              <span aria-hidden="true" class="shrink-0 text-foreground/45">
+                ·
+              </span>
+              <span class="text-foreground/75">{item}</span>
+            </li>
+          ))
+        }
+      </ul>
+    </section>
+
+    <section class="mt-10 border-t border-border pt-8">
+      <h2 class="text-xl font-semibold tracking-wide">怎么申请</h2>
+      <ol class="mt-4 space-y-3">
+        {
+          steps.map((step, i) => (
+            <li class="flex gap-4 leading-relaxed">
+              <span class="w-5 shrink-0 text-lg font-semibold text-accent tabular-nums">
+                {i + 1}
+              </span>
+              <span class="text-foreground/85">{step}</span>
+            </li>
+          ))
+        }
+      </ol>
+    </section>
+
+    <section class="mt-10 border-t border-border pt-8">
+      <div class="flex items-baseline justify-between gap-4">
+        <h2 class="text-xl font-semibold tracking-wide">本站信息</h2>
+        <button
+          type="button"
+          data-copy={allInfo}
+          class="group inline-flex items-center gap-1.5 text-sm text-foreground/60 transition-colors hover:text-accent data-copied:text-accent"
+        >
+          <IconCopy
+            class="size-4 group-data-copied:hidden"
+            aria-hidden="true"
+          />
+          <IconCheck
+            class="hidden size-4 group-data-copied:block"
+            aria-hidden="true"
+          />
+          <span class="group-data-copied:hidden">复制全部</span>
+          <span class="hidden group-data-copied:inline">已复制</span>
+        </button>
+      </div>
+      <div class="mt-4 max-w-sm">
+        <FriendCard friend={MY_CARD} />
+      </div>
+      <dl class="-mx-3 mt-5">
+        {
+          myInfo.map(item => (
+            <div>
+              <dt class="sr-only">{item.label}</dt>
+              <dd>
+                <button
+                  type="button"
+                  data-copy={item.value}
+                  aria-label={`复制${item.label}`}
+                  class="group flex w-full items-center gap-4 rounded-md px-3 py-2 text-start transition-colors hover:bg-muted/60"
+                >
+                  <span
+                    aria-hidden="true"
+                    class="w-10 shrink-0 text-sm text-foreground/55"
+                  >
+                    {item.label}
+                  </span>
+                  <span class="min-w-0 flex-1 break-all transition-colors group-hover:text-accent">
+                    {item.value}
+                  </span>
+                  <span class="shrink-0 text-foreground/40 transition-colors group-hover:text-accent group-data-copied:text-accent">
+                    <IconCopy
+                      class="size-4 group-data-copied:hidden"
+                      aria-hidden="true"
+                    />
+                    <IconCheck
+                      class="hidden size-4 group-data-copied:block"
+                      aria-hidden="true"
+                    />
+                  </span>
+                </button>
+              </dd>
+            </div>
+          ))
+        }
+      </dl>
+    </section>
+
+    <section class="mt-10 border-t border-border pt-8">
+      <h2 class="text-xl font-semibold tracking-wide">关于移除</h2>
+      <p class="mt-4 leading-relaxed text-foreground/85">
+        如果链接很久打不开，或者一年多没更新，我会先把它从列表里拿下来。哪天恢复了，写信告诉我就好。
+      </p>
+    </section>
+  </Main>
+  <Footer />
+</Layout>
+
+<script>
+  document.addEventListener("astro:page-load", () => {
+    document
+      .querySelectorAll<HTMLButtonElement>("button[data-copy]")
+      .forEach(button => {
+        button.addEventListener("click", async () => {
+          await navigator.clipboard.writeText(button.dataset.copy ?? "");
+          button.dataset.copied = "";
+          setTimeout(() => delete button.dataset.copied, 1500);
+        });
+      });
+  });
+</script>

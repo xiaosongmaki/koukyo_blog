@@ -1,0 +1,50 @@
+---
+import Main from "@/layouts/Main.astro";
+import Layout from "@/layouts/Layout.astro";
+import Header from "@/components/Header.astro";
+import Footer from "@/components/Footer.astro";
+import FriendCard from "@/components/FriendCard.astro";
+import IconArrowRight from "@/assets/icons/IconArrowRight.svg";
+import { FRIENDS } from "@/data/friends";
+import { SITE } from "@/config";
+---
+
+<Layout
+  title={`友链 | ${SITE.title}`}
+  description="koukyo 平时也会去读的个人博客。"
+>
+  <Header />
+  <Main pageTitle="友链">
+    <p class="leading-relaxed text-foreground/85">
+      这里是我平时也会去读的博客，按认识的先后排列。
+    </p>
+
+    {
+      FRIENDS.length > 0 ? (
+        <ul class="mt-8 grid gap-3 sm:grid-cols-2">
+          {FRIENDS.map(friend => (
+            <li>
+              <FriendCard friend={friend} />
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p class="mt-8 rounded-lg border border-dashed border-border p-6 text-center text-sm text-foreground/65">
+          还在慢慢认识新朋友，这里暂时空着。
+        </p>
+      )
+    }
+
+    <a
+      href="/friends/apply/"
+      class="group mt-10 inline-flex items-center gap-1 text-sm text-foreground/65 decoration-dashed underline-offset-4 hover:text-accent hover:underline"
+    >
+      想交换友链的话，可以看看这里
+      <IconArrowRight
+        aria-hidden="true"
+        class="size-4 transition-transform group-hover:translate-x-1 rtl:-rotate-180"
+      />
+    </a>
+  </Main>
+  <Footer />
+</Layout>
