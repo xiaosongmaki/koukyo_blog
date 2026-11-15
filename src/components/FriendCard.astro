@@ -1,0 +1,40 @@
+---
+import type { Friend } from "@/data/friends";
+
+type Props = { friend: Friend };
+
+const { friend } = Astro.props;
+---
+
+<a
+  href={friend.href}
+  target="_blank"
+  rel="noopener"
+  class="group flex h-full items-center gap-4 rounded-lg border border-border p-4 transition-colors hover:border-accent"
+>
+  <span
+    aria-hidden="true"
+    class="relative grid size-12 shrink-0 place-items-center overflow-hidden rounded-full bg-muted text-lg font-semibold text-foreground/70"
+  >
+    {Array.from(friend.name)[0]}
+    <img
+      src={friend.avatar}
+      alt=""
+      width="48"
+      height="48"
+      loading="lazy"
+      decoding="async"
+      referrerpolicy="no-referrer"
+      onerror="this.remove()"
+      class="absolute inset-0 size-full bg-muted object-cover"
+    />
+  </span>
+  <span class="min-w-0">
+    <span class="block truncate font-semibold group-hover:text-accent">
+      {friend.name}
+    </span>
+    <span class="mt-0.5 line-clamp-2 block text-sm text-foreground/70">
+      {friend.desc}
+    </span>
+  </span>
+</a>
