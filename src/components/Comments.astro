@@ -78,6 +78,17 @@ const SCRIPT_SRI =
   }
 
   let fields: MutationObserver | undefined;
+  let twikooStyles: HTMLStyleElement[] | undefined;
+
+  // Twikoo injects its stylesheet once, when the script first runs. The client
+  // router swaps <head> on navigation and drops it, so put it back on each mount.
+  function restoreTwikooStyles() {
+    twikooStyles ??= [...document.head.querySelectorAll("style")].filter(s =>
+      s.textContent?.includes(".twikoo")
+    );
+    for (const style of twikooStyles)
+      if (!style.isConnected) document.head.appendChild(style);
+  }
 
   // Twikoo's preview only renders the text; give it the writer's name and avatar.
   function syncPreview(root: HTMLElement) {
@@ -121,6 +132,7 @@ const SCRIPT_SRI =
         el.dataset.sri ?? ""
       );
       if (!el.isConnected) return;
+      restoreTwikooStyles();
       await twikoo.init({
         envId: el.dataset.envId,
         el: "#tcomment",
