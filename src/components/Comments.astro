@@ -1,0 +1,880 @@
+---
+// Twikoo backend: Vercel project `koukyo-comments` (see README「评论」).
+const ENV_ID = "https://comments.koukyo.site";
+const SCRIPT_SRCS = [
+  "https://registry.npmmirror.com/twikoo/2.0.17/files/dist/twikoo.min.js",
+  "https://cdn.jsdelivr.net/npm/twikoo@2.0.17/dist/twikoo.min.js",
+];
+// Same file on both CDNs; regenerate when bumping the version.
+const SCRIPT_SRI =
+  "sha384-EJPyhbbrkvGsDOBDGqqwgcYL6MJufQJbVC2yq58Qu77AeXzyZy8FQYde04X70ZDF";
+---
+
+<section
+  id="comments"
+  class="comments"
+  aria-labelledby="comments-title"
+  data-pagefind-ignore
+>
+  <div class="comments-intro">
+    <h2 id="comments-title">留言</h2>
+    <p class="comments-copy">
+      读完有想说的，写在这里。邮箱只用来显示头像，不会公开。
+    </p>
+  </div>
+  <div
+    id="tcomment"
+    data-twikoo
+    data-env-id={ENV_ID}
+    data-srcs={JSON.stringify(SCRIPT_SRCS)}
+    data-sri={SCRIPT_SRI}
+  >
+    <p class="comments-loading">评论加载中…</p>
+  </div>
+</section>
+
+<script>
+  type Twikoo = {
+    init: (options: Record<string, unknown>) => Promise<unknown>;
+  };
+  declare global {
+    interface Window {
+      twikoo?: Twikoo;
+    }
+  }
+
+  let loading: Promise<Twikoo> | undefined;
+
+  function loadScript(src: string, sri: string) {
+    return new Promise<void>((resolve, reject) => {
+      const script = document.createElement("script");
+      script.src = src;
+      script.integrity = sri;
+      script.crossOrigin = "anonymous";
+      script.async = true;
+      script.onload = () => resolve();
+      script.onerror = () => {
+        script.remove();
+        reject(new Error(`failed to load ${src}`));
+      };
+      document.head.appendChild(script);
+    });
+  }
+
+  function loadTwikoo(srcs: string[], sri: string) {
+    loading ??= (async () => {
+      for (const src of srcs) {
+        try {
+          await loadScript(src, sri);
+          if (window.twikoo) return window.twikoo;
+        } catch {
+          // try the next CDN
+        }
+      }
+      loading = undefined;
+      throw new Error("twikoo unavailable");
+    })();
+    return loading;
+  }
+
+  let fields: MutationObserver | undefined;
+
+  // Twikoo's preview only renders the text; give it the writer's name and avatar.
+  function syncPreview(root: HTMLElement) {
+    for (const submit of root.querySelectorAll<HTMLElement>(".tk-submit")) {
+      const src = submit.querySelector<HTMLImageElement>(".tk-avatar img")?.src;
+      submit.style.setProperty(
+        "--tk-self-avatar",
+        src ? `url(${JSON.stringify(src)})` : "none"
+      );
+      const preview = submit.querySelector(".tk-preview-container");
+      if (!preview) continue;
+      const nick = root
+        .querySelector<HTMLInputElement>(".tk-submit input[name=nick]")
+        ?.value.trim();
+      preview.setAttribute("data-nick", nick || "你");
+    }
+  }
+
+  // Twikoo's field captions are plain divs, so its inputs have no accessible name.
+  function labelFields(root: HTMLElement) {
+    for (const submit of root.querySelectorAll(".tk-submit")) {
+      const textarea = submit.querySelector("textarea");
+      if (textarea && !textarea.hasAttribute("aria-label")) {
+        textarea.setAttribute("aria-label", "留言内容");
+        if (!textarea.placeholder)
+          textarea.placeholder = "写下你的想法，支持 Markdown";
+      }
+      for (const field of submit.querySelectorAll(".tk-meta-input .tk-input")) {
+        const input = field.querySelector("input");
+        const label = field.querySelector(".tk-input-group__prepend");
+        if (input && label && !input.hasAttribute("aria-label"))
+          input.setAttribute("aria-label", label.textContent?.trim() ?? "");
+      }
+    }
+  }
+
+  async function mount(el: HTMLElement) {
+    try {
+      const twikoo = await loadTwikoo(
+        JSON.parse(el.dataset.srcs ?? "[]"),
+        el.dataset.sri ?? ""
+      );
+      if (!el.isConnected) return;
+      await twikoo.init({
+        envId: el.dataset.envId,
+        el: "#tcomment",
+        path: location.pathname,
+        lang: "zh-CN",
+      });
+      labelFields(el);
+      syncPreview(el);
+      // Reply boxes and previews are created on demand, so patch them as they appear.
+      fields?.disconnect();
+      fields = new MutationObserver(() => {
+        labelFields(el);
+        syncPreview(el);
+      });
+      fields.observe(el, {
+        childList: true,
+        subtree: true,
+        attributes: true,
+        attributeFilter: ["src"],
+      });
+      el.addEventListener("input", () => syncPreview(el));
+    } catch {
+      if (el.isConnected)
+        el.innerHTML =
+          '<p class="comments-loading">评论暂时加载不出来，请稍后刷新再试。</p>';
+    }
+  }
+
+  let observer: IntersectionObserver | undefined;
+
+  document.addEventListener("astro:before-swap", () => {
+    observer?.disconnect();
+    fields?.disconnect();
+  });
+  document.addEventListener("astro:page-load", () => {
+    const el = document.querySelector<HTMLElement>("[data-twikoo]");
+    if (!el) return;
+    observer = new IntersectionObserver(
+      entries => {
+        if (!entries.some(e => e.isIntersecting)) return;
+        observer?.disconnect();
+        mount(el);
+      },
+      { rootMargin: "600px 0px" }
+    );
+    observer.observe(el);
+  });
+</script>
+
+<style>
+  .comments {
+    margin-block: 2.5rem;
+    padding-block: 2rem;
+    color: var(--foreground);
+  }
+  .comments-intro {
+    margin-bottom: 1.75rem;
+  }
+  .comments h2 {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 600;
+    line-height: 1.35;
+    letter-spacing: -0.025em;
+  }
+  .comments-copy {
+    margin: 0.75rem 0 0;
+    font-size: 0.9375rem;
+    line-height: 1.8;
+  }
+  .comments-loading {
+    font-size: 0.9375rem;
+    color: color-mix(in srgb, var(--foreground) 60%, var(--background));
+  }
+</style>
+
+<!--
+  Twikoo injects its own stylesheet at runtime with `.twikoo .tk-*` selectors;
+  the `#comments` prefix keeps these overrides ahead of it regardless of order.
+-->
+<style is:global>
+  #comments {
+    --tk-ink: var(--foreground);
+    --tk-soft: color-mix(in srgb, var(--foreground) 58%, var(--background));
+    --tk-line: color-mix(in srgb, var(--foreground) 16%, var(--background));
+    --tk-line-strong: color-mix(
+      in srgb,
+      var(--foreground) 32%,
+      var(--background)
+    );
+    --tk-tint: color-mix(in srgb, var(--foreground) 4%, var(--background));
+    --tk-tint-strong: color-mix(
+      in srgb,
+      var(--foreground) 9%,
+      var(--background)
+    );
+    --tk-ring: color-mix(in srgb, var(--accent) 18%, transparent);
+    --tk-avatar: 2.5rem;
+    --tk-gutter: 1rem;
+  }
+  #comments .twikoo {
+    color: var(--tk-ink);
+    font: inherit;
+    font-size: 1rem;
+  }
+  #comments :where(.twikoo input, .twikoo textarea, .twikoo button) {
+    font: inherit;
+  }
+
+  /* ===== Composer: avatar on the left, everything else in one column ===== */
+  #comments .tk-submit {
+    display: grid;
+    grid-template-columns: var(--tk-avatar) minmax(0, 1fr);
+    column-gap: var(--tk-gutter);
+    margin-top: 0;
+  }
+  #comments .tk-submit > .tk-row:first-child {
+    display: contents;
+  }
+  #comments .tk-submit > * {
+    grid-column: 2;
+  }
+  #comments .tk-submit .tk-avatar {
+    grid-column: 1;
+    grid-row: 1;
+    width: var(--tk-avatar);
+    height: var(--tk-avatar);
+    margin: 0.25rem 0 0;
+    border-radius: 50%;
+  }
+  #comments .tk-submit .tk-avatar.tk-has-avatar {
+    box-shadow: 0 0 0 1px var(--tk-line);
+  }
+  /* The placeholder glyph is itself a circle, so it fills the slot instead of nesting in one. */
+  #comments .tk-avatar:not(.tk-has-avatar) {
+    background: transparent;
+  }
+  #comments .tk-avatar:not(.tk-has-avatar) .tk-avatar-img,
+  #comments .tk-avatar:not(.tk-has-avatar) .tk-icon,
+  #comments .tk-avatar:not(.tk-has-avatar) .tk-icon svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+    line-height: 0;
+  }
+  #comments .tk-avatar:not(.tk-has-avatar) .tk-avatar-img {
+    color: var(--tk-line-strong);
+  }
+  #comments .tk-submit .tk-col {
+    grid-row: 1;
+    overflow: hidden;
+    border: 1px solid var(--tk-line-strong);
+    border-radius: 12px;
+    background: var(--background);
+    transition:
+      border-color 150ms,
+      box-shadow 150ms;
+  }
+  #comments .tk-submit .tk-col:focus-within {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 4px var(--tk-ring);
+  }
+  #comments .tk-submit .tk-textarea {
+    order: -1;
+  }
+  #comments .tk-input__inner {
+    color: var(--tk-ink);
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    font-size: 1rem;
+  }
+  #comments .tk-input__inner::placeholder {
+    color: var(--tk-soft);
+    opacity: 1;
+  }
+  #comments .tk-input__inner:focus {
+    border: 0;
+  }
+  #comments .tk-textarea .tk-textarea__inner {
+    min-height: 8rem !important;
+    padding: 1rem 1.125rem 2rem;
+    line-height: 1.8;
+    resize: none;
+  }
+  #comments .tk-input__count {
+    right: 1.125rem;
+    bottom: 0.625rem;
+    background: transparent;
+    color: var(--tk-soft);
+    font-size: 0.75rem;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Name / email / site read like the footer lines of a letter. */
+  #comments .tk-meta-input {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    margin: 0;
+    border-top: 1px dashed var(--tk-line-strong);
+  }
+  #comments .tk-meta-input .tk-input {
+    width: auto;
+    margin: 0;
+    border-radius: 0;
+    background: transparent;
+    transition: background-color 150ms;
+  }
+  #comments .tk-meta-input .tk-input + .tk-input {
+    border-left: 1px dashed var(--tk-line-strong);
+  }
+  #comments .tk-meta-input .tk-input:focus-within {
+    background: var(--tk-tint);
+  }
+  #comments .tk-meta-input .tk-input-group__prepend {
+    height: 2.75rem;
+    padding: 0 0 0 1.125rem;
+    border: 0;
+    background: transparent;
+    color: var(--tk-soft);
+    font-size: 0.8125rem;
+    letter-spacing: 0.05em;
+  }
+  #comments .tk-meta-input .tk-input__inner {
+    height: 2.75rem;
+    padding: 0 1rem 0 0.625rem;
+    font-size: 0.9375rem;
+    line-height: 2.75rem;
+  }
+  #comments .tk-meta-input input:invalid {
+    border: 0;
+  }
+
+  #comments .tk-row.actions {
+    grid-row: 2;
+    align-items: center;
+    margin: 0.75rem 0 0;
+    gap: 0.5rem;
+  }
+  #comments .tk-submit-action-icon {
+    width: 1.125rem;
+    margin-right: 0.875rem;
+    color: var(--tk-soft);
+    transition: color 150ms;
+  }
+  #comments .tk-submit-action-icon:hover {
+    color: var(--accent);
+  }
+  #comments .tk-submit-action-icon svg:hover {
+    opacity: 1;
+  }
+  #comments .tk-submit-action-icon.__markdown {
+    color: var(--tk-soft);
+  }
+
+  #comments .tk-button {
+    height: 2.5rem;
+    padding: 0 1.25rem;
+    border: 1px solid transparent;
+    border-radius: 999px;
+    background: transparent;
+    color: var(--tk-ink);
+    font-size: 0.9375rem;
+    line-height: calc(2.5rem - 2px);
+    transition:
+      opacity 150ms,
+      color 150ms,
+      background-color 150ms,
+      border-color 150ms,
+      transform 150ms;
+  }
+  #comments .tk-button:not(.tk-button--primary):not(.is-disabled):hover,
+  #comments .tk-button:not(.tk-button--primary):not(.is-disabled):focus {
+    color: var(--tk-ink);
+    background: var(--tk-tint-strong);
+    border-color: transparent;
+  }
+  #comments .tk-button--primary,
+  #comments .tk-button--primary:not(.is-disabled):hover,
+  #comments .tk-button--primary:not(.is-disabled):focus,
+  #comments .tk-button--primary:not(.is-disabled):active {
+    border-color: var(--foreground);
+    background: var(--foreground);
+    color: var(--background);
+    font-weight: 600;
+  }
+  #comments .tk-button--primary::after {
+    content: "→";
+    display: inline-block;
+    margin-left: 0.375rem;
+    transition: transform 150ms;
+  }
+  #comments .tk-button--primary:not(.is-disabled):hover::after {
+    transform: translateX(2px);
+  }
+  #comments .tk-button--primary.is-disabled,
+  #comments .tk-button--primary.is-disabled:hover,
+  #comments .tk-button--primary.is-disabled:focus,
+  #comments .tk-button--primary.is-disabled:active {
+    border: 1px dashed var(--tk-line-strong);
+    background: transparent;
+    color: var(--tk-soft);
+    font-weight: 400;
+    opacity: 1;
+  }
+  #comments .tk-button:not(.is-disabled):active {
+    transform: translateY(1px);
+  }
+  #comments .tk-button + .tk-button {
+    margin-left: 0.25rem;
+  }
+  #comments .tk-button:focus-visible,
+  #comments .tk-action-link:focus-visible,
+  #comments .tk-actions button:focus-visible {
+    outline: 2px dashed var(--accent);
+    outline-offset: 2px;
+  }
+  #comments .tk-input__inner:focus-visible {
+    outline: none;
+  }
+
+  /* Preview renders as the comment will appear: avatar, name, then text. */
+  #comments .tk-preview-container {
+    position: relative;
+    display: grid;
+    grid-template-columns: var(--tk-avatar) minmax(0, 1fr);
+    grid-row: 3;
+    gap: 0.25rem 0.875rem;
+    margin: 1rem 0 0;
+    padding: 1rem 1.125rem;
+    border: 1px dashed var(--tk-line-strong);
+    border-radius: 12px;
+    background: var(--tk-tint);
+    line-height: 1.8;
+  }
+  #comments .tk-preview-container::before {
+    content: "";
+    grid-row: 1 / span 2;
+    width: var(--tk-avatar);
+    height: var(--tk-avatar);
+    border-radius: 50%;
+    background:
+      var(--tk-self-avatar, none) center / cover no-repeat,
+      var(--tk-tint-strong);
+  }
+  #comments .tk-preview-container::after {
+    content: attr(data-nick);
+    grid-column: 2;
+    grid-row: 1;
+    font-weight: 600;
+    line-height: 1.6;
+  }
+  #comments .tk-preview-container > div {
+    grid-column: 2;
+    grid-row: 2;
+    min-width: 0;
+  }
+  #comments .tk-preview-container > div::before {
+    content: "预览";
+    position: absolute;
+    top: -0.75em;
+    left: 1rem;
+    padding: 0 0.5rem;
+    background: var(--background);
+    color: var(--tk-soft);
+    font-size: 0.75rem;
+    letter-spacing: 0.1em;
+    line-height: 1.5;
+  }
+
+  /* ===== List ===== */
+  #comments .tk-comments-container {
+    min-height: 0;
+    margin-top: 3.5rem;
+  }
+  #comments .tk-comments-title {
+    align-items: baseline;
+    margin-bottom: 0;
+    padding-bottom: 0.875rem;
+    border-bottom: 1px solid var(--tk-line);
+    font-size: 1.125rem;
+    font-weight: 600;
+    line-height: 1.4;
+  }
+  #comments
+    .tk-comments-container:has(.tk-comments-no)
+    .tk-comments-count.__hidden {
+    visibility: visible;
+  }
+  #comments .tk-comments-count.__hidden > span {
+    display: none;
+  }
+  #comments .tk-comments-count.__hidden::before {
+    content: "还没有留言";
+  }
+  #comments .tk-comments-actions {
+    gap: 0.875rem;
+  }
+  #comments .tk-icon.__comments {
+    width: 0.9375rem;
+    height: 0.9375rem;
+    color: var(--tk-soft);
+    transition: color 150ms;
+  }
+  #comments .tk-icon.__comments:hover {
+    color: var(--accent);
+  }
+  #comments .tk-icon.__comments.__active {
+    color: var(--accent);
+    background: transparent;
+    box-shadow: none;
+  }
+  #comments .tk-comments-no {
+    justify-content: flex-start;
+    padding-block: 1.5rem 0.5rem;
+    color: var(--tk-soft);
+    font-size: 0.9375rem;
+  }
+  #comments .tk-comments-no > span {
+    display: none;
+  }
+  #comments .tk-comments-no::before {
+    content: "第一句话，留给你。";
+  }
+  #comments .tk-comments-search .tk-input {
+    border-radius: 999px;
+    background: var(--tk-tint);
+  }
+  #comments .tk-comments-search .tk-input__inner {
+    height: 2.5rem;
+    padding-inline: 1rem;
+  }
+  #comments .tk-comments-sort {
+    gap: 0.25rem;
+  }
+  #comments .tk-sort-item {
+    padding: 0.125rem 0.625rem;
+    border-radius: 999px;
+    color: var(--tk-soft);
+    font-size: 0.875rem;
+    font-weight: 400;
+    transition:
+      color 150ms,
+      background-color 150ms;
+  }
+  #comments .tk-sort-item:hover {
+    color: var(--tk-ink);
+  }
+  #comments .tk-sort-item.__active,
+  #comments .tk-sort-item:focus {
+    background: var(--tk-tint-strong);
+    color: var(--tk-ink);
+  }
+  #comments .tk-extras {
+    display: none;
+  }
+
+  #comments .tk-comments-container > .tk-comment {
+    margin-top: 0;
+    padding-block: 1.5rem;
+    border-bottom: 1px dashed var(--tk-line);
+  }
+  #comments .tk-comment {
+    word-break: normal;
+    overflow-wrap: anywhere;
+  }
+  #comments .tk-avatar {
+    width: var(--tk-avatar);
+    height: var(--tk-avatar);
+    margin-right: var(--tk-gutter);
+    border-radius: 50%;
+  }
+  #comments .tk-avatar.tk-has-avatar {
+    background: var(--tk-tint-strong);
+  }
+  #comments .tk-avatar .tk-avatar-img {
+    color: var(--tk-line-strong);
+  }
+  #comments .tk-meta {
+    align-items: baseline;
+    gap: 0.5rem;
+  }
+  #comments .tk-nick,
+  #comments .tk-nick-link {
+    color: var(--tk-ink);
+    font-weight: 600;
+  }
+  #comments .tk-nick-link {
+    text-decoration: underline dashed transparent;
+    text-underline-offset: 4px;
+    transition:
+      color 150ms,
+      text-decoration-color 150ms;
+  }
+  #comments .tk-nick-link:hover {
+    color: var(--accent);
+    text-decoration-color: currentColor;
+  }
+  #comments .tk-time {
+    color: var(--tk-soft);
+    font-size: 0.8125rem;
+  }
+  #comments .tk-tag {
+    padding: 0 0.5rem;
+    border: 0;
+    border-radius: 999px;
+    background: var(--accent);
+    color: var(--background);
+    font-size: 0.75rem;
+    line-height: 1.6;
+  }
+  #comments .tk-tag-green,
+  #comments .tk-tag-yellow,
+  #comments .tk-tag-red {
+    background: var(--tk-tint-strong);
+    color: var(--tk-ink);
+  }
+  #comments .tk-actions button,
+  #comments .tk-action-link,
+  #comments .tk-action-icon {
+    color: var(--tk-soft);
+    transition:
+      color 150ms,
+      opacity 150ms;
+  }
+  #comments .tk-actions button:hover,
+  #comments .tk-action-link:hover,
+  #comments .tk-action-link:hover .tk-action-icon,
+  #comments .tk-action-link.tk-liked,
+  #comments .tk-action-link.tk-liked .tk-action-icon {
+    color: var(--accent);
+  }
+  #comments .tk-action-link {
+    margin-left: 0.875rem;
+  }
+  #comments .tk-action-count {
+    font-variant-numeric: tabular-nums;
+  }
+  @media (hover: hover) {
+    #comments .tk-comment .tk-actions {
+      opacity: 0.55;
+      transition: opacity 150ms;
+    }
+    #comments .tk-comment:hover > .tk-main > .tk-row .tk-actions,
+    #comments .tk-comment .tk-actions:focus-within {
+      opacity: 1;
+    }
+  }
+
+  #comments .tk-content {
+    margin-top: 0.25rem;
+    color: var(--tk-ink);
+    font-size: 1rem;
+    line-height: 1.85;
+  }
+  /* Tailwind's preflight strips Markdown elements; restore them at comment scale. */
+  #comments
+    :is(.tk-content, .tk-preview-container)
+    :is(p, ul, ol, pre, blockquote, table) {
+    margin: 0 0 0.5em;
+  }
+  #comments :is(.tk-content, .tk-preview-container) > :last-child,
+  #comments .tk-preview-container > div > :last-child {
+    margin-bottom: 0;
+  }
+  #comments
+    :is(.tk-content, .tk-preview-container)
+    :is(h1, h2, h3, h4, h5, h6) {
+    margin: 0.75em 0 0.375em;
+    font-weight: 600;
+    line-height: 1.5;
+  }
+  #comments
+    :is(.tk-content, .tk-preview-container)
+    :is(h1, h2, h3, h4, h5, h6):first-child {
+    margin-top: 0;
+  }
+  #comments :is(.tk-content, .tk-preview-container) h1 {
+    font-size: 1.25em;
+  }
+  #comments :is(.tk-content, .tk-preview-container) h2 {
+    font-size: 1.125em;
+  }
+  #comments :is(.tk-content, .tk-preview-container) :is(h3, h4, h5, h6) {
+    font-size: 1em;
+  }
+  #comments :is(.tk-content, .tk-preview-container) ul {
+    padding-left: 1.25em;
+    list-style: disc;
+  }
+  #comments :is(.tk-content, .tk-preview-container) ol {
+    padding-left: 1.25em;
+    list-style: decimal;
+  }
+  #comments :is(.tk-content, .tk-preview-container) li::marker {
+    color: var(--tk-soft);
+  }
+  #comments :is(.tk-content, .tk-preview-container) a {
+    color: var(--tk-ink);
+    text-decoration: underline dashed;
+    text-underline-offset: 4px;
+  }
+  #comments :is(.tk-content, .tk-preview-container) a:hover {
+    color: var(--accent);
+  }
+  #comments :is(.tk-content, .tk-preview-container) code {
+    padding: 0.125rem 0.25rem;
+    border-radius: 4px;
+    background: color-mix(in srgb, var(--muted) 75%, transparent);
+    font-size: 0.9em;
+  }
+  #comments :is(.tk-content, .tk-preview-container) pre {
+    overflow-x: auto;
+    padding: 0.75rem 1rem;
+    border-radius: 8px;
+    background: var(--tk-tint-strong);
+  }
+  #comments :is(.tk-content, .tk-preview-container) pre code {
+    padding: 0;
+    background: none;
+  }
+  #comments :is(.tk-content, .tk-preview-container) blockquote {
+    padding-left: 0.875rem;
+    border-left: 3px solid var(--accent);
+    color: var(--tk-soft);
+  }
+  #comments :is(.tk-content, .tk-preview-container) hr {
+    margin: 0.75em 0;
+    border: 0;
+    border-top: 1px solid var(--tk-line);
+  }
+  #comments :is(.tk-content, .tk-preview-container) img:not(.tk-owo-emotion) {
+    max-width: 100%;
+    border-radius: 6px;
+  }
+  #comments :is(.tk-content, .tk-preview-container) table {
+    display: block;
+    overflow-x: auto;
+    border-collapse: collapse;
+  }
+  #comments :is(.tk-content, .tk-preview-container) :is(th, td) {
+    padding: 0.25rem 0.625rem;
+    border: 1px solid var(--tk-line);
+  }
+
+  /* Replies hang off a thread line instead of sitting in a box. */
+  #comments .tk-replies {
+    margin-top: 0.75rem;
+    padding: 0 0 0 1rem;
+    border-left: 2px solid var(--tk-line);
+  }
+  #comments .tk-replies:not(:has(.tk-comment)) {
+    display: none;
+  }
+  #comments .tk-replies .tk-comment {
+    margin-top: 1rem;
+  }
+  #comments .tk-replies .tk-avatar {
+    width: 1.75rem;
+    height: 1.75rem;
+    margin-right: 0.625rem;
+  }
+  #comments .tk-replies .tk-avatar .tk-avatar-img {
+    height: 1.75rem;
+    line-height: 1.75rem;
+  }
+  #comments .tk-replies .tk-content {
+    font-size: 0.9375rem;
+  }
+  #comments .tk-replies .tk-nick-link {
+    font-size: inherit;
+  }
+  #comments .tk-comment .tk-submit {
+    --tk-avatar: 2rem;
+    margin-top: 1rem;
+  }
+  #comments .tk-expand {
+    margin-top: 0.5rem;
+    padding: 0.5rem;
+    border-radius: 999px;
+    color: var(--tk-soft);
+    font-size: 0.875rem;
+  }
+  #comments .tk-expand:hover,
+  #comments .tk-expand:active {
+    background: var(--tk-tint-strong);
+    color: var(--tk-ink);
+  }
+
+  #comments .tk-pagination {
+    margin-top: 2rem;
+    font-size: 0.9375rem;
+  }
+  #comments .tk-pagination-pager {
+    border-radius: 999px;
+  }
+  #comments .tk-pagination-pager.__current {
+    background: var(--foreground);
+    color: var(--background);
+  }
+  #comments .tk-pagination .tk-input__inner {
+    background: var(--tk-tint);
+  }
+
+  #comments .tk-footer {
+    margin-top: 1.25rem;
+    color: var(--tk-soft);
+    font-size: 0.75rem;
+    opacity: 0.7;
+  }
+  #comments .tk-footer a {
+    color: inherit;
+  }
+  #comments .tk-loading-spinner .path {
+    stroke: var(--accent);
+  }
+  #comments .tk-error {
+    border: 0;
+    border-radius: 8px;
+  }
+
+  @media (max-width: 639px) {
+    #comments {
+      --tk-avatar: 2rem;
+      --tk-gutter: 0.75rem;
+    }
+    #comments .tk-submit {
+      grid-template-columns: minmax(0, 1fr);
+    }
+    #comments .tk-submit > * {
+      grid-column: 1;
+    }
+    #comments .tk-submit .tk-avatar {
+      display: none;
+    }
+    #comments .tk-meta-input {
+      grid-template-columns: 1fr;
+    }
+    #comments .tk-meta-input .tk-input + .tk-input {
+      border-left: 0;
+      border-top: 1px dashed var(--tk-line-strong);
+    }
+    #comments .tk-action-link {
+      margin-left: 0.625rem;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    #comments .tk-button,
+    #comments .tk-button--primary::after,
+    #comments .tk-submit .tk-col {
+      transition: none;
+    }
+    #comments .tk-button:not(.is-disabled):active {
+      transform: none;
+    }
+  }
+</style>

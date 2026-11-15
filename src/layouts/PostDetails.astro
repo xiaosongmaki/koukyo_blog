@@ -9,6 +9,7 @@ import ShareLinks from "@/components/ShareLinks.astro";
 import BackButton from "@/components/BackButton.astro";
 import BackToTopButton from "@/components/BackToTopButton.astro";
 import Newsletter from "@/components/Newsletter.astro";
+import Comments from "@/components/Comments.astro";
 import { getPath } from "@/utils/getPath";
 import { getLinesForPost } from "@/utils/getMap";
 import { slugifyStr } from "@/utils/slugify";
@@ -185,6 +186,10 @@ const nextPost =
     <hr class="my-6 border-dashed" />
 
     <Newsletter />
+
+    <hr class="my-6 border-dashed" />
+
+    <Comments />
 
     <!-- Chronological fallback for posts that are not on any Map line -->
     {

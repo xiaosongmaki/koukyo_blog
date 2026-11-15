@@ -17,7 +17,7 @@ koukyo 的个人博客，地址 <https://koukyo.site/>。
 │   ├── data/blog/_2026/  # 博客文章
 │   ├── data/newsletters.ts # 感谢页「你可能也会感兴趣」里的其他邮件
 │   ├── pages/about.md    # 关于页
-│   └── components/       # 页面组件，Newsletter.astro 是订阅表单
+│   └── components/       # 页面组件，Newsletter.astro 是订阅表单，Comments.astro 是评论区
 └── Makefile              # make new 新建文章
 ```
 
@@ -71,6 +71,14 @@ Umami 自托管实例 https://umami.peguni.com ，网站 `blog_kyo`（ID `b259e1
 新增一份邮件：在 `src/data/newsletters.ts` 的 `OFFERS` 里加一项。只放链接时 `oneClick: false`；要一键订阅，再在 `api/subscribe.ts` 的 `OPTIN_TARGETS` 里登记同名 `id` 的订阅函数。
 
 需求雷达的一键订阅调用 Windmill `f/passive_income/reddit_radar/reddit_radar_subscribe`（`ref=blog_thanks`），和雷达站自己的表单走同一个脚本，已退订的人不会被重新订阅。没配 `WINDMILL_RADAR_SUBSCRIBE_TOKEN` 时接口返回 503，页面提示改点链接。
+
+## 评论
+
+文章页底部用 [Twikoo](https://twikoo.js.org/) 评论（`src/components/Comments.astro`），友链页不开评论。读者只填昵称和邮箱就能留言，不用登录。
+
+- 后端是单独的 Vercel 项目 `koukyo-comments`（官方 `vercel-min` 模板，只多了锁定 `twikoo-vercel` 版本和 `vercel.json` 里的 `"regions": ["hnd1"]`，用 CLI 从本机部署，不在本仓库），域名 `comments.koukyo.site`，Cloudflare 上是指向 `76.76.21.21` 的 A 记录（仅 DNS）。数据存在 MongoDB Atlas 的东京集群，连接串只放在该项目的环境变量 `MONGODB_URI` 里。
+- 前端脚本在评论区接近视口时才加载，先用 npmmirror，失败再用 jsDelivr，两边带同一个 SRI。升级时前后端版本一起改：后端改 `twikoo-vercel` 版本后重新部署，前端改 `Comments.astro` 里的版本号并重新算 SRI（`curl -sL <url> | openssl dgst -sha384 -binary | openssl base64 -A`）。
+- 管理面板在评论区里点齿轮进入，评论审核、邮件通知、Akismet 都在那里配置。评论按页面路径区分，改文章 slug 会让旧评论对不上。
 
 ## 环境变量
 
