@@ -91,6 +91,11 @@ export const MAP_LINES: MapLine[] = [
         kind: "方法",
         takeaway: "指标搭好之后，多久看一次同样重要",
       },
+      {
+        slug: "byproduct-thinking",
+        kind: "方法",
+        takeaway: "从自己已经在做的事情里找产品，成本最低",
+      },
     ],
   },
   {

@@ -2,7 +2,7 @@
 author: koukyo
 pubDatetime: 2026-11-02T10:00:00+08:00
 title: 年化 15% 的投资组合，每天看一次，赢面只有 53%
-featured: true
+featured: false
 draft: false
 tags:
   - 财务自由
