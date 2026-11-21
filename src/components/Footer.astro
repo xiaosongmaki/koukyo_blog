@@ -1,5 +1,6 @@
 ---
 import type { HTMLAttributes } from "astro/types";
+import IconTrain from "@/assets/icons/IconTrain.svg";
 import Socials from "./Socials.astro";
 
 const currentYear = new Date().getFullYear();
@@ -27,6 +28,19 @@ const { noMarginTop = false, class: className, ...attrs } = Astro.props;
       <span>Copyright &#169; {currentYear}</span>
       <span class="hidden sm:inline">&nbsp;|&nbsp;</span>
       <span>All rights reserved.</span>
+      <a
+        href="https://www.travellings.cn/go.html"
+        target="_blank"
+        rel="noopener"
+        title="开往-友链接力"
+        class="group mt-2 inline-flex items-center gap-1.5 rounded-full border border-foreground/20 px-2.5 py-0.5 text-sm opacity-90 transition-colors hover:border-accent hover:text-accent sm:mt-0 sm:ml-3"
+      >
+        <IconTrain
+          class="size-4 transition-transform duration-300 group-hover:translate-x-0.5"
+          aria-hidden="true"
+        />
+        <span>开往</span>
+      </a>
     </div>
   </div>
 </footer>
