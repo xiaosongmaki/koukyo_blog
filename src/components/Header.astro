@@ -1,10 +1,9 @@
 ---
 import IconX from "@/assets/icons/IconX.svg";
-import IconMoon from "@/assets/icons/IconMoon.svg";
 import IconSearch from "@/assets/icons/IconSearch.svg";
 import IconArchive from "@/assets/icons/IconArchive.svg";
-import IconSunHigh from "@/assets/icons/IconSunHigh.svg";
 import IconMenuDeep from "@/assets/icons/IconMenuDeep.svg";
+import IconTrain from "@/assets/icons/IconTrain.svg";
 import LinkButton from "./LinkButton.astro";
 import { SITE } from "@/config";
 
@@ -109,7 +108,7 @@ const isActive = (path: string) => {
             </li>
           )
         }
-        <li class="col-span-1 flex items-center justify-center">
+        <li class="col-span-2 flex items-center justify-center">
           <LinkButton
             href="/search/"
             class:list={[
@@ -123,22 +122,19 @@ const isActive = (path: string) => {
             <span class="sr-only">Search</span>
           </LinkButton>
         </li>
-        {
-          SITE.lightAndDarkMode && (
-            <li class="col-span-1 flex items-center justify-center">
-              <button
-                id="theme-btn"
-                class="focus-outline relative size-12 p-4 sm:size-8 hover:[&>svg]:stroke-accent"
-                title="Toggles light & dark"
-                aria-label="auto"
-                aria-live="polite"
-              >
-                <IconMoon class="absolute top-[50%] left-[50%] -translate-[50%] scale-100 rotate-0 transition-all dark:scale-0 dark:-rotate-90" />
-                <IconSunHigh class="absolute top-[50%] left-[50%] -translate-[50%] scale-0 rotate-90 transition-all dark:scale-100 dark:rotate-0" />
-              </button>
-            </li>
-          )
-        }
+        <li class="col-span-2">
+          <LinkButton
+            href="https://www.travellings.cn/go.html"
+            target="_blank"
+            rel="noopener"
+            class="focus-outline flex justify-center p-3 sm:p-1"
+            title="开往-友链接力"
+            aria-label="开往-友链接力"
+          >
+            <IconTrain class="hidden sm:inline-block" />
+            <span class="sm:sr-only">开往</span>
+          </LinkButton>
+        </li>
       </ul>
     </nav>
   </div>
