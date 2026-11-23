@@ -3,7 +3,6 @@ import IconX from "@/assets/icons/IconX.svg";
 import IconSearch from "@/assets/icons/IconSearch.svg";
 import IconArchive from "@/assets/icons/IconArchive.svg";
 import IconMenuDeep from "@/assets/icons/IconMenuDeep.svg";
-import IconTrain from "@/assets/icons/IconTrain.svg";
 import LinkButton from "./LinkButton.astro";
 import { SITE } from "@/config";
 
@@ -120,19 +119,6 @@ const isActive = (path: string) => {
           >
             <IconSearch />
             <span class="sr-only">Search</span>
-          </LinkButton>
-        </li>
-        <li class="col-span-2">
-          <LinkButton
-            href="https://www.travellings.cn/go.html"
-            target="_blank"
-            rel="noopener"
-            class="focus-outline flex justify-center p-3 sm:p-1"
-            title="开往-友链接力"
-            aria-label="开往-友链接力"
-          >
-            <IconTrain class="hidden sm:inline-block" />
-            <span class="sm:sr-only">开往</span>
           </LinkButton>
         </li>
       </ul>

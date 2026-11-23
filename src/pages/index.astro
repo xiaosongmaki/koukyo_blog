@@ -10,6 +10,7 @@ import utc from "dayjs/plugin/utc";
 import timezone from "dayjs/plugin/timezone";
 import { getPath } from "@/utils/getPath";
 import Newsletter from "@/components/Newsletter.astro";
+import TravellingsBadge from "@/components/TravellingsBadge.astro";
 import getSortedPosts from "@/utils/getSortedPosts";
 import IconRss from "@/assets/icons/IconRss.svg";
 import IconArrowRight from "@/assets/icons/IconArrowRight.svg";
@@ -57,6 +58,7 @@ const recentPosts = sortedPosts.filter(({ data }) => !data.featured);
           <div class="mt-4 flex max-sm:flex-col sm:items-center">
             <div class="me-2 mb-1 whitespace-nowrap sm:mb-0">Social Links:</div>
             <Socials />
+            <TravellingsBadge class="mt-2 self-start sm:ms-auto sm:mt-0 sm:self-auto" />
           </div>
         )
       }
