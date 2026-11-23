@@ -1,0 +1,236 @@
+---
+// A small card that offers the newsletter to people who have clearly been
+// reading for a while. It never takes focus, never covers the page with a
+// backdrop, and shows at most once per visitor every 15 days.
+import NewsletterForm from "@/components/NewsletterForm.astro";
+import IconX from "@/assets/icons/IconX.svg";
+---
+
+<aside
+  data-nudge
+  class="nudge"
+  aria-labelledby="nudge-title"
+  data-pagefind-ignore
+  hidden
+>
+  <button type="button" class="nudge-close" data-nudge-close aria-label="关闭">
+    <IconX aria-hidden="true" />
+  </button>
+  <p id="nudge-title" class="nudge-title">喜欢这篇的话，下一篇寄给你。</p>
+  <p class="nudge-copy">有新文章时写信告诉你。免费，随时退订。</p>
+  <NewsletterForm source="nudge" compact />
+</aside>
+
+<script>
+  const SEEN_KEY = "kyo-nudge-seen";
+  const SUBSCRIBER_KEY = "kyo-subscriber";
+  const COOLDOWN_MS = 15 * 24 * 60 * 60 * 1000;
+  // Active reading time and how far through the article the reader must be
+  const READ_MS = 60_000;
+  const DEPTH = 0.5;
+  // Time without scroll, key or pointer input after which we stop counting
+  const IDLE_MS = 30_000;
+
+  function storageGet(key: string) {
+    try {
+      return localStorage.getItem(key);
+    } catch {
+      return null;
+    }
+  }
+  function storageSet(key: string, value: string) {
+    try {
+      localStorage.setItem(key, value);
+    } catch {
+      // Private mode or blocked storage: the nudge just may show again
+    }
+  }
+
+  function shouldSkip() {
+    if (storageGet(SUBSCRIBER_KEY)) return true;
+    const seen = Number(storageGet(SEEN_KEY));
+    return Number.isFinite(seen) && Date.now() - seen < COOLDOWN_MS;
+  }
+
+  let teardown: (() => void) | undefined;
+
+  document.addEventListener("astro:before-swap", () => teardown?.());
+
+  document.addEventListener("astro:page-load", () => {
+    teardown?.();
+    teardown = undefined;
+
+    const nudge = document.querySelector<HTMLElement>("[data-nudge]");
+    const article = document.getElementById("article");
+    if (!nudge || !article) return;
+
+    // `?nudge` in the URL shows the card after 3 seconds without any reading
+    // conditions, for previews
+    const forced = new URLSearchParams(location.search).has("nudge");
+    if (!forced && shouldSkip()) return;
+
+    const readMs = forced ? 3_000 : READ_MS;
+    let activeMs = 0;
+    let lastInput = performance.now();
+    let footerInView = false;
+    let shown = false;
+
+    const markInput = () => (lastInput = performance.now());
+    const inputEvents = ["scroll", "keydown", "pointermove", "touchstart"];
+    for (const type of inputEvents)
+      window.addEventListener(type, markInput, { passive: true });
+
+    function depth() {
+      const rect = article!.getBoundingClientRect();
+      return (window.innerHeight - rect.top) / rect.height;
+    }
+
+    function close(dismissed: boolean) {
+      if (!nudge!.hasAttribute("data-open")) return;
+      nudge!.removeAttribute("data-open");
+      const hide = () => (nudge!.hidden = true);
+      if (matchMedia("(prefers-reduced-motion: reduce)").matches) hide();
+      else nudge!.addEventListener("transitionend", hide, { once: true });
+      if (dismissed) window.umami?.track("newsletter-nudge-dismiss");
+    }
+
+    function show() {
+      shown = true;
+      stopTimer();
+      storageSet(SEEN_KEY, String(Date.now()));
+      nudge!.hidden = false;
+      // Let the hidden -> visible change paint before starting the transition
+      requestAnimationFrame(() =>
+        requestAnimationFrame(() => nudge!.setAttribute("data-open", ""))
+      );
+      window.umami?.track("newsletter-nudge-shown");
+    }
+
+    // Once the newsletter section at the end is on screen, the card is redundant
+    const footerForm = document.getElementById("newsletter");
+    const observer = new IntersectionObserver(entries => {
+      footerInView = entries.some(e => e.isIntersecting);
+      if (footerInView && shown) close(false);
+    });
+    if (footerForm) observer.observe(footerForm);
+
+    const timer = window.setInterval(() => {
+      const active =
+        forced ||
+        (document.visibilityState === "visible" &&
+          performance.now() - lastInput < IDLE_MS);
+      if (active) activeMs += 1000;
+      if (activeMs >= readMs && !footerInView && (forced || depth() >= DEPTH))
+        show();
+    }, 1000);
+    const stopTimer = () => window.clearInterval(timer);
+
+    const closeButton = nudge.querySelector("[data-nudge-close]")!;
+    const onClose = () => close(true);
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && nudge.contains(document.activeElement))
+        close(true);
+    };
+    closeButton.addEventListener("click", onClose);
+    document.addEventListener("keydown", onKey);
+
+    teardown = () => {
+      stopTimer();
+      observer.disconnect();
+      for (const type of inputEvents)
+        window.removeEventListener(type, markInput);
+      closeButton.removeEventListener("click", onClose);
+      document.removeEventListener("keydown", onKey);
+    };
+  });
+</script>
+
+<style>
+  .nudge {
+    position: fixed;
+    z-index: 60;
+    right: 1.5rem;
+    bottom: 1.5rem;
+    width: min(20rem, calc(100vw - 2rem));
+    padding: 1.125rem 1.25rem 1.25rem;
+    border-radius: 6px;
+    background: color-mix(in srgb, var(--foreground) 3%, var(--background));
+    color: var(--foreground);
+    box-shadow:
+      0 1px 2px rgb(0 0 0 / 0.06),
+      0 16px 40px -12px rgb(0 0 0 / 0.22);
+    opacity: 0;
+    transform: translateY(16px);
+    transition:
+      opacity 280ms ease-out,
+      transform 420ms cubic-bezier(0.2, 0.7, 0.2, 1);
+  }
+  :global(html[data-theme="dark"]) .nudge {
+    background: color-mix(in srgb, var(--foreground) 7%, var(--background));
+    box-shadow:
+      0 1px 2px rgb(0 0 0 / 0.3),
+      0 16px 40px -12px rgb(0 0 0 / 0.5);
+  }
+  .nudge[data-open] {
+    opacity: 1;
+    transform: none;
+  }
+  .nudge-title {
+    margin: 0;
+    padding-right: 2rem;
+    font-size: 1.0625rem;
+    font-weight: 600;
+    line-height: 1.5;
+  }
+  .nudge-copy {
+    margin: 0.25rem 0 0.875rem;
+    font-size: 0.875rem;
+    line-height: 1.7;
+    color: color-mix(in srgb, var(--foreground) 75%, var(--background));
+  }
+  .nudge-close {
+    position: absolute;
+    top: 0.625rem;
+    right: 0.625rem;
+    display: grid;
+    place-items: center;
+    width: 2rem;
+    height: 2rem;
+    border-radius: 4px;
+    color: color-mix(in srgb, var(--foreground) 60%, var(--background));
+    transition:
+      color 150ms,
+      background-color 150ms;
+  }
+  .nudge-close:hover {
+    color: var(--foreground);
+    background: color-mix(in srgb, var(--foreground) 8%, transparent);
+  }
+  .nudge-close :global(svg) {
+    width: 1.125rem;
+    height: 1.125rem;
+  }
+  @media (max-width: 639px) {
+    .nudge {
+      right: 0.75rem;
+      left: 0.75rem;
+      bottom: calc(0.75rem + env(safe-area-inset-bottom));
+      width: auto;
+      padding: 0.875rem 1rem 1rem;
+    }
+    .nudge-title {
+      margin-bottom: 0.625rem;
+      font-size: 1rem;
+    }
+    .nudge-copy {
+      display: none;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .nudge,
+    .nudge-close {
+      transition: none;
+      transform: none;
+    }
+  }
+</style>

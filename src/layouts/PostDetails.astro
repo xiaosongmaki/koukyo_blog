@@ -9,6 +9,7 @@ import ShareLinks from "@/components/ShareLinks.astro";
 import BackButton from "@/components/BackButton.astro";
 import BackToTopButton from "@/components/BackToTopButton.astro";
 import Newsletter from "@/components/Newsletter.astro";
+import SubscribeNudge from "@/components/SubscribeNudge.astro";
 import Comments from "@/components/Comments.astro";
 import { getPath } from "@/utils/getPath";
 import { getLinesForPost } from "@/utils/getMap";
@@ -222,6 +223,7 @@ const nextPost =
         </div>
       )
     }
+    <SubscribeNudge />
   </main>
   <Footer />
 </Layout>
