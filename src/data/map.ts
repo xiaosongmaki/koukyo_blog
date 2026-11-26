@@ -96,6 +96,11 @@ export const MAP_LINES: MapLine[] = [
         kind: "方法",
         takeaway: "从自己已经在做的事情里找产品，成本最低",
       },
+      {
+        slug: "reddit-radar-48-days",
+        kind: "经历",
+        takeaway: "看到需求离真的开始还很远，先补上出海路径和模板",
+      },
     ],
   },
   {
