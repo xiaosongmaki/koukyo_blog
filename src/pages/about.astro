@@ -219,12 +219,13 @@ const topics = [
 
     <div id="contact" class="pt-4">
       <Newsletter />
-      <p class="text-base leading-relaxed">
-        也欢迎直接写信给我：<a
-          href="mailto:koukyo@koukyo.site"
-          class="text-accent underline-offset-4 hover:underline"
+      <p class="max-w-[42em] text-sm leading-relaxed text-pretty text-foreground/75">
+        有商业合作需求，或者单纯有些想法想跟我交流交流，欢迎写信到
+        <a
+          href={`mailto:koukyo@koukyo.site?subject=${encodeURIComponent("[koukyo博客] ")}`}
+          class="inline-block text-accent underline decoration-accent/40 underline-offset-4 hover:decoration-current focus-visible:outline-2 focus-visible:outline-offset-2"
           >koukyo@koukyo.site</a
-        >
+        >。
       </p>
     </div>
   </main>
