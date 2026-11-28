@@ -1,0 +1,147 @@
+---
+import { render } from "astro:content";
+import Breadcrumb from "@/components/Breadcrumb.astro";
+import Layout from "@/layouts/Layout.astro";
+import Header from "@/components/Header.astro";
+import Footer from "@/components/Footer.astro";
+import IconRss from "@/assets/icons/IconRss.svg";
+import { getSortedNotes, getNotePath, type Note } from "@/utils/notes";
+import { formatNoteDate, formatNoteWeekday } from "@/utils/formatNoteDate";
+import { SITE } from "@/config";
+
+type Entry = {
+  note: Note;
+  Content: Awaited<ReturnType<typeof render>>["Content"];
+};
+
+const notes = await getSortedNotes();
+
+// Group by month; notes are already sorted newest first
+const months: { key: string; label: string; entries: Entry[] }[] = [];
+for (const note of notes) {
+  const key = formatNoteDate(note.data.pubDatetime, "YYYY-MM");
+  let month = months.at(-1);
+  if (!month || month.key !== key) {
+    month = {
+      key,
+      label: formatNoteDate(note.data.pubDatetime, "YYYY 年 M 月"),
+      entries: [],
+    };
+    months.push(month);
+  }
+  month.entries.push({ note, Content: (await render(note)).Content });
+}
+---
+
+<Layout
+  title={`Notes | ${SITE.title}`}
+  description="koukyo 的短想法，主要写一些细碎的思考。"
+>
+  <Header />
+  <Breadcrumb />
+  <main id="main-content" class="app-layout pb-4">
+    <div class="mb-6 flex items-center gap-3">
+      <h1 class="text-2xl font-semibold sm:text-3xl">Notes</h1>
+      <a
+        target="_blank"
+        href="/notes/rss.xml"
+        aria-label="Notes RSS feed"
+        title="订阅 Notes 的 RSS（独立于博客 RSS）"
+      >
+        <IconRss
+          width={20}
+          height={20}
+          class="scale-125 stroke-accent stroke-3 rtl:-rotate-90"
+        />
+        <span class="sr-only">Notes RSS Feed</span>
+      </a>
+    </div>
+    <section id="overview" class="pb-4">
+      <p class="leading-relaxed text-foreground/85">
+        主要写一些细碎的思考，成体系化的长文可以参考
+        <a
+          href="/map/"
+          class="underline decoration-dashed underline-offset-4 hover:text-accent"
+          >Map</a
+        >。
+      </p>
+
+      {
+        months.length > 1 && (
+          <nav aria-label="按月份翻阅" class="mt-6">
+            <ul class="flex flex-wrap gap-2 text-sm tabular-nums">
+              {months.map(month => (
+                <li>
+                  <a
+                    href={`#${month.key}`}
+                    class="inline-flex items-center gap-1.5 rounded-full border border-border px-3 py-1 transition-colors hover:border-accent hover:text-accent"
+                  >
+                    {month.label}
+                    <span class="text-xs text-foreground/55">
+                      {month.entries.length}
+                    </span>
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </nav>
+        )
+      }
+    </section>
+
+    {
+      notes.length === 0 && (
+        <p class="mt-10 text-foreground/70">还没有写下第一条。</p>
+      )
+    }
+
+    {
+      months.map(month => (
+        <section
+          id={month.key}
+          aria-labelledby={`${month.key}-title`}
+          class="mt-10"
+        >
+          <h2
+            id={`${month.key}-title`}
+            class="sticky top-0 z-10 bg-background py-2 text-lg font-semibold tabular-nums"
+          >
+            {month.label}
+            <span class="ms-1.5 text-sm font-normal text-foreground/55">
+              {month.entries.length} 条
+            </span>
+          </h2>
+          <ol>
+            {month.entries.map(({ note, Content }) => (
+              <li
+                id={note.id}
+                class="border-b border-dashed border-border py-6 last:border-b-0 sm:grid sm:grid-cols-[5.5rem_1fr] sm:gap-6"
+              >
+                <a
+                  href={getNotePath(note.id)}
+                  class="group flex items-baseline gap-2 tabular-nums sm:flex-col sm:gap-0.5"
+                  title="单独打开这条"
+                >
+                  <time
+                    datetime={note.data.pubDatetime.toISOString()}
+                    class="text-2xl leading-none font-semibold text-foreground/80 group-hover:text-accent"
+                  >
+                    {formatNoteDate(note.data.pubDatetime, "DD")}
+                  </time>
+                  <span class="text-xs text-foreground/55 group-hover:text-accent">
+                    {formatNoteWeekday(note.data.pubDatetime)}{" "}
+                    {formatNoteDate(note.data.pubDatetime, "HH:mm")}
+                  </span>
+                </a>
+                <div class="app-prose mt-3 max-w-none sm:mt-0 [&>:first-child]:mt-0 [&>:last-child]:mb-0">
+                  <Content />
+                </div>
+              </li>
+            ))}
+          </ol>
+        </section>
+      ))
+    }
+  </main>
+  <Footer />
+</Layout>

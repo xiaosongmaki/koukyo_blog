@@ -5,6 +5,7 @@ import IconSunHigh from "@/assets/icons/IconSunHigh.svg";
 import { SITE } from "@/config";
 import Socials from "./Socials.astro";
 import TravellingsBadge from "./TravellingsBadge.astro";
+import FriendsBadge from "./FriendsBadge.astro";
 
 const currentYear = new Date().getFullYear();
 
@@ -47,7 +48,10 @@ const { noMarginTop = false, class: className, ...attrs } = Astro.props;
       <span>Copyright &#169; {currentYear}</span>
       <span class="hidden sm:inline">&nbsp;|&nbsp;</span>
       <span>All rights reserved.</span>
-      <TravellingsBadge class="mt-2 sm:mt-0 sm:ml-3" />
+      <div class="mt-2 flex gap-2 sm:mt-0 sm:ml-3">
+        <FriendsBadge />
+        <TravellingsBadge />
+      </div>
     </div>
   </div>
 </footer>

@@ -1,4 +1,11 @@
 ---
+type Props = {
+  // Overrides the text of the last crumb (defaults to the URL segment)
+  current?: string;
+};
+
+const { current } = Astro.props;
+
 // Remove current url path and remove trailing slash if exists
 const currentUrlPath = Astro.url.pathname.replace(/\/+$/, "");
 
@@ -20,10 +27,15 @@ const breadcrumbList = currentUrlPath.split("/").slice(1);
         index + 1 === breadcrumbList.length ? (
           <li>
             <span
-              class:list={["capitalize opacity-75", { lowercase: index > 0 }]}
+              class:list={[
+                "opacity-75",
+                current
+                  ? "tabular-nums"
+                  : ["capitalize", { lowercase: index > 0 }],
+              ]}
               aria-current="page"
             >
-              {decodeURIComponent(breadcrumb)}
+              {current ?? decodeURIComponent(breadcrumb)}
             </span>
           </li>
         ) : (

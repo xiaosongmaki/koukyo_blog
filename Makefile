@@ -1,4 +1,4 @@
-.PHONY: new
+.PHONY: new note
 
 # 创建新博客文章
 # 用法: make new title="文章标题" [tags="标签1,标签2"] [description="文章描述"] [draft=true]
@@ -35,3 +35,17 @@ new:
 	echo "✅ 新文章已创建: $$filepath"; \
 	echo "📝 标题: $(title)"; \
 	echo "🏷️  标签: $$tags_val"
+
+# 记一条短想法（Notes），文件名按当前时间生成
+# 用法: make note
+note:
+	@dir="src/data/notes"; \
+	filepath="$$dir/$$(date +%Y-%m-%d-%H%M).md"; \
+	mkdir -p "$$dir"; \
+	if [ -f "$$filepath" ]; then \
+		echo "❌ 文件已存在: $$filepath"; \
+		exit 1; \
+	fi; \
+	datetime=$$(date +"%Y-%m-%dT%H:%M:%S%z" | sed 's/\(..\)$$/:\1/'); \
+	printf -- "---\npubDatetime: %s\n---\n\n" "$$datetime" > "$$filepath"; \
+	echo "✅ 新 Note 已创建: $$filepath"

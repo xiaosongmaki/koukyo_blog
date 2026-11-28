@@ -129,6 +129,12 @@ const structuredData = {
       title={SITE.title}
       href={new URL("rss.xml", Astro.site)}
     />
+    <link
+      rel="alternate"
+      type="application/rss+xml"
+      title={`Notes | ${SITE.title}`}
+      href={new URL("notes/rss.xml", Astro.site)}
+    />
 
     <meta name="theme-color" content="" />
 
@@ -145,9 +151,20 @@ const structuredData = {
     }
 
     <!-- Umami Analytics -->
-    <script is:inline data-astro-rerun defer src="https://umami.peguni.com/script.js" data-website-id="b259e1da-dadc-4168-83b8-e3aab495dd3f" data-domains="koukyo.site" data-performance="true"></script>
+    <script
+      is:inline
+      data-astro-rerun
+      defer
+      src="https://umami.peguni.com/script.js"
+      data-website-id="b259e1da-dadc-4168-83b8-e3aab495dd3f"
+      data-domains="koukyo.site"
+      data-performance="true"></script>
     <!-- Session replay + heatmaps. No data-astro-rerun: the recorder hooks history itself and must start only once. -->
-    <script is:inline defer src="https://umami.peguni.com/recorder.js" data-website-id="b259e1da-dadc-4168-83b8-e3aab495dd3f"></script>
+    <script
+      is:inline
+      defer
+      src="https://umami.peguni.com/recorder.js"
+      data-website-id="b259e1da-dadc-4168-83b8-e3aab495dd3f"></script>
 
     <ClientRouter />
 
@@ -193,7 +210,11 @@ const structuredData = {
       function trackOutbound(event: MouseEvent) {
         if (event.type === "auxclick" && event.button !== 1) return;
         const link = (event.target as Element | null)?.closest?.("a[href]");
-        if (!(link instanceof HTMLAnchorElement) || !/^https?:$/.test(link.protocol)) return;
+        if (
+          !(link instanceof HTMLAnchorElement) ||
+          !/^https?:$/.test(link.protocol)
+        )
+          return;
         if (link.hostname === location.hostname) return;
         window.umami?.track("outbound", {
           url: link.href,

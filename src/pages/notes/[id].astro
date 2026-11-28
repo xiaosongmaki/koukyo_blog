@@ -1,0 +1,87 @@
+---
+import { render } from "astro:content";
+import Breadcrumb from "@/components/Breadcrumb.astro";
+import Layout from "@/layouts/Layout.astro";
+import Header from "@/components/Header.astro";
+import Footer from "@/components/Footer.astro";
+import IconArrowLeft from "@/assets/icons/IconArrowLeft.svg";
+import {
+  getSortedNotes,
+  getNotePath,
+  getNoteExcerpt,
+  type Note,
+} from "@/utils/notes";
+import { formatNoteDate, formatNoteWeekday } from "@/utils/formatNoteDate";
+import { SITE } from "@/config";
+
+export async function getStaticPaths() {
+  const notes = await getSortedNotes();
+  return notes.map((note, index) => ({
+    params: { id: note.id },
+    props: {
+      note,
+      newer: notes[index - 1] ?? null,
+      older: notes[index + 1] ?? null,
+    },
+  }));
+}
+
+type Props = { note: Note; newer: Note | null; older: Note | null };
+
+const { note, newer, older } = Astro.props;
+const { Content } = await render(note);
+const { pubDatetime } = note.data;
+const date = formatNoteDate(pubDatetime);
+---
+
+<Layout
+  title={`${getNoteExcerpt(note, 30)} | Notes | ${SITE.title}`}
+  description={getNoteExcerpt(note, 120)}
+  pubDatetime={note.data.pubDatetime}
+>
+  <Header />
+  <Breadcrumb
+    current={`${date} ${formatNoteWeekday(pubDatetime)} ${formatNoteDate(pubDatetime, "HH:mm")}`}
+  />
+  <main id="main-content" class="app-layout pb-4">
+    <article data-pagefind-body>
+      <h1 class="sr-only">{getNoteExcerpt(note, 30)}</h1>
+      <div class="app-prose mt-6 max-w-app [&>:first-child]:mt-0">
+        <Content />
+      </div>
+    </article>
+
+    <nav
+      aria-label="Notes"
+      class="mt-14 flex flex-col gap-4 text-sm sm:flex-row sm:justify-between"
+    >
+      <a
+        href="/notes/"
+        class="group inline-flex items-center gap-1 hover:text-accent"
+      >
+        <IconArrowLeft
+          aria-hidden="true"
+          class="size-4 transition-transform group-hover:-translate-x-1 rtl:rotate-180"
+        />
+        全部 Notes
+      </a>
+      <div class="flex gap-6 text-foreground/70">
+        {
+          newer && (
+            <a href={getNotePath(newer.id)} class="hover:text-accent">
+              新一条
+            </a>
+          )
+        }
+        {
+          older && (
+            <a href={getNotePath(older.id)} class="hover:text-accent">
+              旧一条
+            </a>
+          )
+        }
+      </div>
+    </nav>
+  </main>
+  <Footer />
+</Layout>

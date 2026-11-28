@@ -4,13 +4,15 @@ import Layout from "@/layouts/Layout.astro";
 import Header from "@/components/Header.astro";
 import Footer from "@/components/Footer.astro";
 import Socials from "@/components/Socials.astro";
-import LinkButton from "@/components/LinkButton.astro";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
 import timezone from "dayjs/plugin/timezone";
 import { getPath } from "@/utils/getPath";
 import Newsletter from "@/components/Newsletter.astro";
 import TravellingsBadge from "@/components/TravellingsBadge.astro";
+import FriendsBadge from "@/components/FriendsBadge.astro";
+import { getSortedNotes, getNotePath, getNoteExcerpt } from "@/utils/notes";
+import { formatNoteDate } from "@/utils/formatNoteDate";
 import getSortedPosts from "@/utils/getSortedPosts";
 import IconRss from "@/assets/icons/IconRss.svg";
 import IconArrowRight from "@/assets/icons/IconArrowRight.svg";
@@ -25,6 +27,7 @@ const posts = await getCollection("blog");
 const sortedPosts = getSortedPosts(posts);
 const featuredPosts = sortedPosts.filter(({ data }) => data.featured);
 const recentPosts = sortedPosts.filter(({ data }) => !data.featured);
+const recentNotes = (await getSortedNotes()).slice(0, 3);
 ---
 
 <Layout>
@@ -58,7 +61,10 @@ const recentPosts = sortedPosts.filter(({ data }) => !data.featured);
           <div class="mt-4 flex max-sm:flex-col sm:items-center">
             <div class="me-2 mb-1 whitespace-nowrap sm:mb-0">Social Links:</div>
             <Socials />
-            <TravellingsBadge class="mt-2 self-start sm:ms-auto sm:mt-0 sm:self-auto" />
+            <div class="mt-2 flex gap-2 self-start sm:ms-auto sm:mt-0 sm:self-auto">
+              <FriendsBadge />
+              <TravellingsBadge />
+            </div>
           </div>
         )
       }
@@ -97,7 +103,7 @@ const recentPosts = sortedPosts.filter(({ data }) => !data.featured);
 
     {
       recentPosts.length > 0 && (
-        <section id="recent-posts" class="pt-12 pb-6">
+        <section id="recent-posts" class="border-b border-border pt-12 pb-10">
           <h2 class="text-2xl font-semibold tracking-wide">Recent Posts</h2>
           <ul class="mt-6 space-y-8">
             {recentPosts.slice(0, SITE.postPerIndex).map(post => (
@@ -122,18 +128,57 @@ const recentPosts = sortedPosts.filter(({ data }) => !data.featured);
               </li>
             ))}
           </ul>
+          <a
+            href="/archives/"
+            class="group mt-8 inline-flex items-center gap-1 text-sm text-foreground/70 hover:text-accent"
+          >
+            全部 Posts
+            <IconArrowRight
+              aria-hidden="true"
+              class="size-4 transition-transform group-hover:translate-x-1 rtl:-rotate-180"
+            />
+          </a>
+        </section>
+      )
+    }
+
+    {
+      recentNotes.length > 0 && (
+        <section id="recent-notes" class="pt-12 pb-6">
+          <h2 class="text-2xl font-semibold tracking-wide">Notes</h2>
+          <ul class="mt-6 space-y-6">
+            {recentNotes.map(note => (
+              <li>
+                <a
+                  href={getNotePath(note.id)}
+                  class="block leading-relaxed decoration-dashed underline-offset-4 hover:text-accent hover:underline"
+                >
+                  {getNoteExcerpt(note, 90)}
+                </a>
+                <time
+                  class="mt-1.5 block text-xs text-foreground/60 tabular-nums"
+                  datetime={note.data.pubDatetime.toISOString()}
+                >
+                  {formatNoteDate(note.data.pubDatetime)}
+                </time>
+              </li>
+            ))}
+          </ul>
+          <a
+            href="/notes/"
+            class="group mt-8 inline-flex items-center gap-1 text-sm text-foreground/70 hover:text-accent"
+          >
+            全部 Notes
+            <IconArrowRight
+              aria-hidden="true"
+              class="size-4 transition-transform group-hover:translate-x-1 rtl:-rotate-180"
+            />
+          </a>
         </section>
       )
     }
 
     <Newsletter />
-
-    <div class="my-8 text-center">
-      <LinkButton href="/archives/">
-        Archives
-        <IconArrowRight class="inline-block rtl:-rotate-180" />
-      </LinkButton>
-    </div>
   </main>
   <Footer />
 </Layout>
