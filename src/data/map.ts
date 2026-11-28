@@ -19,7 +19,7 @@ export type MapLine = {
 };
 
 export const MAP_INTRO =
-  "我的文章主要有三条线：一是一路走来的经历，二是自己摸索出的创业理念，三是如何让收入不再绑死在时间上的财务规划。";
+  "我的文章主要有三条线：一是一路走来的经历，二是自己摸索出的创业理念，三是尝试让收入不再绑死在时间上的财务规划。";
 
 export const START_HERE = [
   "hello-world",
@@ -34,7 +34,7 @@ export const MAP_LINES: MapLine[] = [
     color: "#e0582f",
     question: "从东京到广州，这一路发生了什么？",
     intro:
-      "按时间顺序读，是我毕业创业、关掉日本公司、回国重新开始的过程。每一站都是一次试错。",
+      "是我在日本开公司又关闭公司，回国继续探索的过程。",
     stations: [
       {
         slug: "hello-world",
@@ -69,7 +69,7 @@ export const MAP_LINES: MapLine[] = [
     color: "#1a9a85",
     question: "写代码之前，怎么知道一个想法值不值得做？",
     intro:
-      "从踩过的坑里总结出来、可以照着做的方法。每个方法都配了我自己的实战记录。",
+      "从自己惨痛的经验里冥思苦想总结出来的经验，或许能给你启发。",
     stations: [
       {
         slug: "validate-startup-idea-lean-experiments",
