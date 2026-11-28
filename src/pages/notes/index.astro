@@ -1,5 +1,6 @@
 ---
 import { render } from "astro:content";
+import IconChevronRight from "@/assets/icons/IconChevronRight.svg";
 import Breadcrumb from "@/components/Breadcrumb.astro";
 import Layout from "@/layouts/Layout.astro";
 import Header from "@/components/Header.astro";
@@ -133,9 +134,29 @@ for (const note of notes) {
                     {formatNoteDate(note.data.pubDatetime, "HH:mm")}
                   </span>
                 </a>
-                <div class="app-prose mt-3 max-w-none sm:mt-0 [&>:first-child]:mt-0 [&>:last-child]:mb-0">
-                  <Content />
-                </div>
+                <note-preview class="mt-3 block min-w-0 sm:mt-0">
+                  <div id={`note-body-${note.id}`} data-note-viewport>
+                    <div
+                      class="app-prose note-prose [&>:first-child]:mt-0 [&>:last-child]:mb-0"
+                      data-note-body
+                    >
+                      <Content />
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    hidden
+                    aria-controls={`note-body-${note.id}`}
+                    aria-expanded="false"
+                    class="group mt-1 cursor-pointer py-1 text-sm text-accent underline-offset-4 hover:underline"
+                  >
+                    <span>展开全文</span>
+                    <IconChevronRight
+                      aria-hidden="true"
+                      class="inline size-3 rotate-90 align-middle group-aria-expanded:-rotate-90"
+                    />
+                  </button>
+                </note-preview>
               </li>
             ))}
           </ol>
@@ -145,3 +166,79 @@ for (const note of notes) {
   </main>
   <Footer />
 </Layout>
+
+<style>
+  note-preview[data-collapsed] [data-note-viewport] {
+    max-height: var(--note-preview-height);
+    overflow: clip;
+    mask-image: linear-gradient(
+      to bottom,
+      #000 calc(100% - 1.5rem),
+      transparent
+    );
+  }
+</style>
+
+<script>
+  class NotePreview extends HTMLElement {
+    private observer?: ResizeObserver;
+    private listeners?: AbortController;
+
+    connectedCallback() {
+      const viewport = this.querySelector<HTMLElement>("[data-note-viewport]");
+      const body = this.querySelector<HTMLElement>("[data-note-body]");
+      const button = this.querySelector("button");
+      const label = button?.querySelector("span");
+      if (!viewport || !body || !button || !label) return;
+
+      let expanded = false;
+      const update = () => {
+        const previewHeight = 7 * parseFloat(getComputedStyle(body).lineHeight);
+        const overflows =
+          body.getBoundingClientRect().height > previewHeight + 1;
+        this.style.setProperty("--note-preview-height", `${previewHeight}px`);
+        this.toggleAttribute("data-collapsed", overflows && !expanded);
+        button.hidden = !overflows;
+        button.setAttribute("aria-expanded", String(expanded));
+        label.textContent = expanded ? "收起" : "展开全文";
+      };
+
+      this.listeners = new AbortController();
+      const { signal } = this.listeners;
+      button.addEventListener(
+        "click",
+        () => {
+          expanded = !expanded;
+          update();
+          if (!expanded) button.scrollIntoView({ block: "nearest" });
+        },
+        { signal }
+      );
+      viewport.addEventListener(
+        "focusin",
+        event => {
+          if (
+            this.hasAttribute("data-collapsed") &&
+            event.target instanceof HTMLElement &&
+            event.target.getBoundingClientRect().bottom >
+              viewport.getBoundingClientRect().bottom - 24
+          ) {
+            expanded = true;
+            update();
+          }
+        },
+        { signal }
+      );
+      this.observer = new ResizeObserver(update);
+      this.observer.observe(body);
+      update();
+    }
+
+    disconnectedCallback() {
+      this.observer?.disconnect();
+      this.listeners?.abort();
+    }
+  }
+
+  customElements.define("note-preview", NotePreview);
+</script>
